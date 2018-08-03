@@ -1,7 +1,11 @@
 <div class="map container-fluid" style="padding-left: 0px; padding-right: 0px">
     <div class="logo-container-map">
+  <!-- Ante cambio logo 2017 
             <img class="logo-image" src="img/logo-regione.png" alt="Logo regione Liguria">
             <img class="logo-image" src="img/logo-arpal.png" alt="Logo Arpal">
+   --!>
+           <img class="logo-image" src="img/logo-arpal_regione.png" alt="Logo regione Liguria" style="width:60%;height:80%">
+
     </div>
 
     <div id="webcam-dialogs-container" class="dialogs-container"></div>
@@ -51,7 +55,7 @@
                 <div class="map-geo-search-btn col-xs-2 col-md-2">
                     <button class="btn">Cerca</button>
                 </div>
-            </div> -->
+            </div--> 
 
             <div class="side-bar-toggle" ng-class="{'collapsed': m_oController.isSideBarCollapsed()}">
                 <i class=""
@@ -164,7 +168,7 @@
                 </span>
             </div>
             -->
-            <div id="omirl-collapsable-panels" class="date-selector-container high-contrast">
+            <div id="omirl-collapsable-panels" class="date-selector-container high-contrast"  ng-show="m_oController.m_oConstantsService.canUserUseDateSelect()">
                 <div class="dropdown date-selector" ng-class="{'past' : m_oController.m_bNowMode == false}">
                     <div class="mode-info">
                         <span ng-show="m_oController.m_bNowMode == true">{{'MAP_TIMENOW' | translate}}</span>
@@ -494,8 +498,65 @@
                     </accordion-group>
 
 
+                    <!--cima-->
 
 
+                    <accordion-group ng-class="{'map-accordion-open' : isopen}" ng-show="m_oController.m_bShowCimaSensors">
+                        <accordion-heading>
+                            <div class="icon icon-antenna pull-left"></div>
+                            <span class="map-accordion-title">{{'MAP_CIMA_SENSORS' | translate}}</span><i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isopen, 'glyphicon-chevron-right': !isopen}"></i>
+                        </accordion-heading>
+                        <div class="map-accordion-content">
+                            <div class="row">
+                                <sidebar-menu-legacy
+                                        id="{{m_oController.MENU_CIMA_SENSORS}}"
+                                        on-init="null"
+                                        controller="m_oController"
+                                        menu-legend-selected="m_oController.m_sCimaSensorsLegendSelected"
+                                        menu-legend-hover="m_oController.m_sCimaSensorsLegendHover"
+                                        is-first-level="m_oController.m_bIsCimaSensorsFirstLevel"
+                                        on-menu-item-click="m_oController.sensorLinkClicked"
+                                        first-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_1]"
+                                        second-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_2]"
+                                        third-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_3]"
+                                        third-level-menu-selected-item="null"
+                                        third-level-menu-click="m_oController.CimaSensorsClicked"
+                                >
+                                </sidebar-menu-legacy>
+
+                            </div>
+                        </div>
+                    </accordion-group>
+
+
+                    <accordion-group ng-class="{'map-accordion-open' : isopen}" ng-show="m_oController.m_bShowCimaImpact">
+                        <accordion-heading>
+                            <div class="icon icon-antenna pull-left"></div>
+                            <span class="map-accordion-title">{{'MENU_CIMA_IMPACT' | translate}}</span><i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isopen, 'glyphicon-chevron-right': !isopen}"></i>
+                        </accordion-heading>
+                        <div class="map-accordion-content">
+                            <div class="row">
+                                <sidebar-menu-legacy
+                                        id="{{m_oController.MENU_CIMA_IMPACT}}"
+                                        on-init="null"
+                                        controller="m_oController"
+                                        menu-legend-selected="m_oController.m_sCimaSensorsLegendSelected"
+                                        menu-legend-hover="m_oController.m_sCimaSensorsLegendHover"
+                                        is-first-level="m_oController.m_bIsCimaSensorsFirstLevel"
+                                        on-menu-item-click="m_oController.sensorLinkClicked"
+                                        first-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_IMPACT][m_oController.MENU_LEVEL_1]"
+                                        second-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_2]"
+                                        third-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_3]"
+                                        third-level-menu-selected-item="null"
+                                        third-level-menu-click="m_oController.CimaSensorsClicked"
+                                >
+                                </sidebar-menu-legacy>
+
+                            </div>
+                        </div>
+                    </accordion-group>
+
+                    <!--end cima-->
 
                 </accordion>
             </div>

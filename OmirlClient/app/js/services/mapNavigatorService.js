@@ -77,6 +77,337 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
             return this.m_oHttp.get(this.APIURL + '/mapnavigator/statics');
         }
 
+        this.aoCimaSensorsLayer = [{
+        "active": false,
+        "clickable": true,
+        "code": "Pluvio",
+        "count": 50,
+            "sensorClass":2,
+        "description": "OMIRLCONFIG_SENSORPLUVIO",
+        "imageLinkInv": "img/sensors/pluviometriInv.png",
+        "imageLinkOff": "img/sensors/pluviometriOff.png",
+        "imageLinkOn": "img/sensors/pluviometriOn.png",
+        "isActive": false,
+        "isClickable": true,
+        "isVisible": true,
+         "linkCode":"cima-sensors",
+        "legendLink": "img/sensors/tp01h_pal.png",
+        "legends": [
+            {
+                "clr": "#FEFEFE",
+                "lmt": 0.2
+            },
+            {
+                "clr": "#E0EBFF",
+                "lmt": 0.5
+            },
+            {
+                "clr": "#B5C9FF",
+                "lmt": 1
+            },
+            {
+                "clr": "#8EB2FF",
+                "lmt": 2
+            },
+            {
+                "clr": "#7F96FF",
+                "lmt": 5
+            },
+            {
+                "clr": "#6370F7",
+                "lmt": 10
+            },
+            {
+                "clr": "#009F1E",
+                "lmt": 15
+            },
+            {
+                "clr": "#3CBC3D",
+                "lmt": 20
+            },
+            {
+                "clr": "#B9F96E",
+                "lmt": 25
+            },
+            {
+                "clr": "#FFF914",
+                "lmt": 30
+            },
+            {
+                "clr": "#FAC81E",
+                "lmt": 35
+            },
+            {
+                "clr": "#EB9628",
+                "lmt": 40
+            },
+            {
+                "clr": "#FA3C3C",
+                "lmt": 45
+            },
+            {
+                "clr": "#CD005A",
+                "lmt": 50
+            },
+            {
+                "clr": "#B400B4",
+                "lmt": 60
+            },
+            {
+                "clr": "#9600C8",
+                "lmt": 70
+            },
+            {
+                "clr": "#A064DC",
+                "lmt": 80
+            },
+            {
+                "clr": "#BE8CC8",
+                "lmt": 90
+            },
+            {
+                "clr": "#E1AFC3",
+                "lmt": 100
+            },
+            {
+                "clr": "#E1C8BE",
+                "lmt": 120
+            },
+            {
+                "clr": "#F0DCE1",
+                "lmt": 10000
+            }
+        ],
+        "mesUnit": "mm 1h",
+        "visible": true,
+        "hasChilds":false,
+        "hasSubLevel": false,
+        "hasThirdLevel": false,
+        "myLevel": 0,
+        "selected":false,
+    },{
+        "active": false,
+        "clickable": true,
+       "selected":false,
+        "code": "Pluvio",
+        "count": 50,
+            "sensorClass":2,
+        "description": "OMIRLCONFIG_SENSORPLUVIO",
+        "imageLinkInv": "img/sensors/pluviometriInv.png",
+        "imageLinkOff": "img/sensors/pluviometriOff.png",
+        "imageLinkOn": "img/sensors/pluviometriOn.png",
+        "isActive": false,
+        "isClickable": true,
+        "isVisible": true,
+        "legendLink": "img/sensors/tp01h_pal.png",
+        "linkCode":"cima-sensors",
+        "legends": [
+            {
+                "clr": "#FEFEFE",
+                "lmt": 0.2
+            },
+            {
+                "clr": "#E0EBFF",
+                "lmt": 0.5
+            },
+            {
+                "clr": "#B5C9FF",
+                "lmt": 1
+            },
+            {
+                "clr": "#8EB2FF",
+                "lmt": 2
+            },
+            {
+                "clr": "#7F96FF",
+                "lmt": 5
+            },
+            {
+                "clr": "#6370F7",
+                "lmt": 10
+            },
+            {
+                "clr": "#009F1E",
+                "lmt": 15
+            },
+            {
+                "clr": "#3CBC3D",
+                "lmt": 20
+            },
+            {
+                "clr": "#B9F96E",
+                "lmt": 25
+            },
+            {
+                "clr": "#FFF914",
+                "lmt": 30
+            },
+            {
+                "clr": "#FAC81E",
+                "lmt": 35
+            },
+            {
+                "clr": "#EB9628",
+                "lmt": 40
+            },
+            {
+                "clr": "#FA3C3C",
+                "lmt": 45
+            },
+            {
+                "clr": "#CD005A",
+                "lmt": 50
+            },
+            {
+                "clr": "#B400B4",
+                "lmt": 60
+            },
+            {
+                "clr": "#9600C8",
+                "lmt": 70
+            },
+            {
+                "clr": "#A064DC",
+                "lmt": 80
+            },
+            {
+                "clr": "#BE8CC8",
+                "lmt": 90
+            },
+            {
+                "clr": "#E1AFC3",
+                "lmt": 100
+            },
+            {
+                "clr": "#E1C8BE",
+                "lmt": 120
+            },
+            {
+                "clr": "#F0DCE1",
+                "lmt": 10000
+            }
+        ],
+        "mesUnit": "mm 1h",
+        "visible": true,
+        "hasSubLevel": false,
+        "myLevel": 0,
+    }];
+
+        this.getCimaImpactFirstLevels= function() {
+            var aoMapLinks = [
+                {
+                    "category": "forecast",
+                    "dataid": "PAI_COMUNEGE",
+                    "descr": "Genoa Flooding areas",
+                    "hierarchy": "hydro models",
+                    "icon": "pericolosità_idraulica_-_gar_2015",
+                    "id": 254,
+                    "latn": 50,
+                    "lats": 30,
+                    "lone": 18,
+                    "lonw": 6,
+                    "metadata": "",
+                    "metadataurl": "",
+                    "name": "Genoa Flooding areas",
+                    "server": {
+                        "descr": "Dewetra Data Server at Cima Foundation",
+                        "id": 1,
+                        "name": "ddscima",
+                        "url": "http://dds.cimafoundation.org"
+                    },
+                    "tags": [
+                        {
+                            "descr": "Floods, flash floods, debris-flow and landslides",
+                            "id": 57,
+                            "name": "Floods debris-flow landslides"
+                        }
+                    ],
+                    "thumb": "",
+                    "type": {
+                        "code": "dynamic",
+                        "id": 1,
+                        "name": "dynamic"
+                    },
+                    "visible": true,
+                    "hasSubLevel": false,
+                    "myLevel": 0,
+                    "active": false,
+                    "clickable": true,
+                    "selected":false,
+                    "code": "Pluvio",
+                    "count": 50,
+                    "sensorClass":2,
+                    "description": "PAI_COMUNEGE",
+                    "imageLinkInv": "img/map/anywhereInv.png",
+                    "imageLinkOff": "img/map/anywhereOff.png",
+                    "imageLinkOn": "img/map/anywhereOn.png",
+                    "isActive": false,
+                    "isClickable": true,
+                    "isVisible": true,
+                    "legendLink": "img/sensors/tp01h_pal.png",
+                    "linkCode":"cima-sensors",
+                },
+                {
+                    "category": "forecast",
+                    "dataid": "comunege.idro.probabilisticlami",
+                    "descr": "Genoa nowcasting-hydro sections",
+                    "hierarchy": "hydro models",
+                    "icon": "weather_stations",
+                    "id": 253,
+                    "latn": 46.968887,
+                    "lats": 36.733334,
+                    "lone": 18.489166,
+                    "lonw": 6.68583,
+                    "metadata": "",
+                    "metadataurl": "",
+                    "name": "Genoa nowcasting-hydro sections",
+                    "server": {
+                        "descr": "Dewetra Data Server at Cima Foundation",
+                        "id": 1,
+                        "name": "ddscima",
+                        "url": "http://dds.cimafoundation.org"
+                    },
+                    "tags": [
+                        {
+                            "descr": "Floods, flash floods, debris-flow and landslides",
+                            "id": 57,
+                            "name": "Floods debris-flow landslides"
+                        }
+                    ],
+                    "thumb": "",
+                    "type": {
+                        "code": "section_probabilistic_lami",
+                        "id": 6,
+                        "name": "section probabilistic LAMI"
+                    },
+                    "visible": true,
+                    "hasSubLevel": false,
+                    "myLevel": 0,
+                    "active": false,
+                    "clickable": true,
+                    "selected":false,
+                    "code": "Pluvio",
+                    "count": 50,
+                    "sensorClass":2,
+                    "description": "Genoa nowcasting-hydro sections",
+                    "imageLinkInv": "img/map/anywhereInv.png",
+                    "imageLinkOff": "img/map/anywhereOff.png",
+                    "imageLinkOn": "img/map/anywhereOn.png",
+                    "isActive": false,
+                    "isClickable": true,
+                    "isVisible": true,
+                    "legendLink": "img/sensors/tp01h_pal.png",
+                    "linkCode":"cima-sensors",
+                }
+            ];
+
+            return aoMapLinks;
+        };
+
+        this.cimaToken = "anywhere%7C1533287411647%7C417d462d-43dd-41ea-8a65-367f0e941aff%3B628";
+
+
+
 
         this.getStaticLayerOptionList = function() {
             var aoStaticLinks = [
@@ -217,6 +548,11 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
             return this.m_oHttp.get(this.APIURL + '/mapnavigator/satellitethird/'+linkCode);
         }
 
+        this.getCimaSensorsFirstLevels = function () {
+
+            return this.aoCimaSensorsLayer;
+        };
+
         this.getFeaturesInfo = function (url) {
             return this.m_oHttp.get(url);
         }
@@ -333,9 +669,9 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
                 {
                     "code": "Foglie",
                     "description": "Bagnatura Foliare",
-                    "imageLinkOn": "img/sensors/fogliareOn.png",
-                    "imageLinkOff": "img/sensors/fogliareOff.png",
-                    "imageLinkInv": "img/sensors/fogliareInv.png",
+                    "imageLinkOn": "img/sensors/anywhereOn.png",
+                    "imageLinkOff": "img/sensors/anywhereOff.png",
+                    "imageLinkInv": "img/sensors/anywhereInv.png",
                     "count": 43,
                     "isActive": false,
                     "legendLink": "img/sensors/sensorsLegend.jpg",

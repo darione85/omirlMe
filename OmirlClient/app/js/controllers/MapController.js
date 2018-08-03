@@ -54,6 +54,8 @@ var MapController = (function () {
         this.MENU_HYDRO = "menu-hydro";
         this.MENU_RADAR = "menu-radar";
         this.MENU_SATELLITE = "menu-satellite";
+        this.MENU_CIMA_SENSORS = "menu-cima-sensors";
+        this.MENU_CIMA_IMPACT = "menu-cima-impact";
         this.MENU_LEVEL_1 = 0;
         this.MENU_LEVEL_2 = 1;
         this.MENU_LEVEL_3 = 2;
@@ -82,6 +84,11 @@ var MapController = (function () {
         this.m_aoMenuLinks[this.MENU_SATELLITE][this.MENU_LEVEL_1] = [];
         this.m_aoMenuLinks[this.MENU_SATELLITE][this.MENU_LEVEL_3] = [];
         this.m_aoMenuLinks[this.MENU_SATELLITE][this.MENU_LEVEL_3] = [];
+        this.m_aoMenuLinks[this.MENU_CIMA_SENSORS] = [];
+        this.m_aoMenuLinks[this.MENU_CIMA_SENSORS][this.MENU_LEVEL_1] = [];
+        this.m_aoMenuLinks[this.MENU_CIMA_IMPACT] = [];
+        this.m_aoMenuLinks[this.MENU_CIMA_IMPACT][this.MENU_LEVEL_1] = [];
+
 
         // *** Methods ***
         this.onPropertyChanged = function (name, newVal) {
@@ -124,6 +131,22 @@ var MapController = (function () {
             console.debug("[MapController] m_oController.m_oMapNavigatorService.getSatelliteFirstLevels()", newValue);
             $scope.m_oController.m_aoMenuLinks[$scope.m_oController.MENU_SATELLITE][$scope.m_oController.MENU_LEVEL_1] = newValue;
         });
+
+        $scope.$watch(function () {
+            return $scope.m_oController.m_oMapNavigatorService.getCimaSensorsFirstLevels();
+        }, function (newValue) {
+            console.debug("[MapController] m_oController.m_oMapNavigatorService.getCimaSensorsFirstLevels()", newValue);
+            $scope.m_oController.m_aoMenuLinks[$scope.m_oController.MENU_CIMA_SENSORS][$scope.m_oController.MENU_LEVEL_1] = newValue;
+        });
+
+        $scope.$watch(function () {
+            return $scope.m_oController.m_oMapNavigatorService.getCimaImpactFirstLevels();
+        }, function (newValue) {
+            console.debug("[MapController] m_oController.m_oMapNavigatorService.getCimaImpactFirstLevels()", newValue);
+            $scope.m_oController.m_aoMenuLinks[$scope.m_oController.MENU_CIMA_IMPACT][$scope.m_oController.MENU_LEVEL_1] = newValue;
+        });
+
+
         $scope.$watch('m_bInitMapComplete', function (newValue, oldValue) {
             if (newValue == true){
                 oControllerVar.m_oMapService.map.updateSize();
@@ -263,8 +286,11 @@ var MapController = (function () {
 
         this.m_bShowSatellite = false;
         this.m_sSatelliteLegendSelected = "";
+        this.m_sCimaSensorsLegendSelected =""
         this.m_sSatelliteLegendHover = "";
+        this.m_sCimaSensorsLegendHover = "";
         this.m_bIsSatelliteFirstLevel = true;
+        this.m_bIsCimaSensorsFirstLevel = true;
         this.m_iSatelliteLevel = 1;
         this.m_bSatelliteLayerActive = false;
 
@@ -272,6 +298,10 @@ var MapController = (function () {
         this.m_bNowMode = true;
 
         this.m_bIsInfoActive = false;
+
+        this.m_bShowCimaSensors = true;
+
+        this.m_bShowCimaImpact = true;
 
 
         // Initialize Layer Service
@@ -1854,7 +1884,9 @@ var MapController = (function () {
 
 
         // Obtain Stations Values from the server
-        this.m_oStationsService.getStations(oSensorLink).success(function(data,status) {
+        var sOmirlOrDavis= (oSensorLink.hasOwnProperty("hasDavisStation"))?"getDavisStations":"getStations";
+
+        this.m_oStationsService[sOmirlOrDavis](oSensorLink).success(function(data,status) {
 
             var aoStations = data;
 
@@ -1945,8 +1977,7 @@ var MapController = (function () {
 //                    new OpenLayers.Geometry.Point(oStation.lon, oStation.lat - fSize),              // 7
 //                    new OpenLayers.Geometry.Point(oStation.lon + fSize, oStation.lat - 2*fSize),
 //                    new OpenLayers.Geometry.Point(oStation.lon + 2*fSize, oStation.lat - fSize),
-//                    new OpenLayers.Geometry.Point(oStation.lon + fSize, oStation.lat),              // 10
-//                    new OpenLayers.Geometry.Point(oStation.lon + 2*fSize, oStation.lat + fSize),
+//                 has   new OpenLayers.Geometry.Point(oStation.lon + 2*fSize, oStation.lat + fSize),
 //                    new OpenLayers.Geometry.Point(oStation.lon + fSize, oStation.lat + 2*fSize)
 //                ];
 //                var oRing = new OpenLayers.Geometry.LinearRing(aoPoints);
@@ -2112,6 +2143,9 @@ var MapController = (function () {
             oServiceVar.m_oLog.error('Error contacting Omirl Server');
         });
     }
+
+
+
 
 
     /**
@@ -3500,6 +3534,63 @@ var MapController = (function () {
             }
         }
     }
+
+
+    /**
+     * Method called when an CimaSensorsClicked link is clicked
+     * @param oCimaSensorLink
+     * @constructor
+     */
+    MapController.prototype.CimaSensorsClicked = function(oCimaSensorLink, oController)
+    {
+        if( !oController )
+            oController = this;
+
+        // Check if the sensor link is active
+        if (!oCimaSensorLink.isActive){
+            // Set the textual description
+            oController.m_sSensorLegendSelected = oCimaSensorLink.description;
+
+            // Reset all actives flag
+            oController.m_aoSensorsLinks.forEach(function(oEntry) {
+                oEntry.isActive = false;
+            });
+
+            // Set this as the active one
+            oCimaSensorLink.isActive = true;
+
+            //TODO: QUI PULIRE LA DIRETTIVA IDRO
+            if( oController.m_aoMenuDirectives[oController.MENU_HYDRO] )
+                oController.m_aoMenuDirectives[oController.MENU_HYDRO].resetDirectiveSelections();
+
+            oController.hideSectionLayer();
+
+            // Set //qui in realtà chiamerò lo stesso metodo omirl con url differente
+            oController.showCimaStationsLayer(oCimaSensorLink);
+
+            oController.m_bSensorLayerActive = true;
+            oController.m_sSensorsLegendPath = oCimaSensorLink.legendLink;
+            oController.m_sSensorsLegendIconPath = oCimaSensorLink.imageLinkOff;
+            oController.m_oTranslateService(oCimaSensorLink.description).then(function(text){
+                oController.m_sSensorLegendTooltip = oController.m_sLegendPrefix + " " + text;
+            });
+            oController.m_oSelectedSensorLink = oCimaSensorLink;
+
+            oController.m_oConstantsService.setSensorLayerActive(oCimaSensorLink.code);
+
+            // Perform some corrections to station legend elements
+            setTimeout(oController.alignStationLegend, 200);
+        }
+        else {
+            oController.hideSensorLayer();
+        }
+
+        if( oController.m_aoMenuDirectives[oController.MENU_SENSORS] )
+        {
+            oController.m_aoMenuDirectives[oController.MENU_SENSORS].updateByController(0, oCimaSensorLink);
+        }
+    }
+
 
 
     /**

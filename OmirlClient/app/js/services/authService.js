@@ -11,6 +11,8 @@ angular.module('omirl.authService', ['omirl.ConstantsService']).
         this.m_oHttp = $http;
 
         this.login = function(oCredentials) {
+            oCredentials.userId="dario@test.it";
+            oCredentials.userPassword="dariodev";
             return this.m_oHttp.post(this.APIURL + '/auth/login',oCredentials);
         }
 

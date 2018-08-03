@@ -7,6 +7,8 @@ angular.module('omirl.stationsService', ['omirl.ConstantsService']).
     service('StationsService', ['$http',  'ConstantsService', function ($http, oConstantsService) {
         this.APIURL = oConstantsService.getAPIURL();
 
+        this.m_oConstantsService = oConstantsService;
+
         this.m_oHttp = $http;
 
         this.m_aoSensorsTable = [
@@ -48,7 +50,11 @@ angular.module('omirl.stationsService', ['omirl.ConstantsService']).
 
         this.getStations = function(oStationsLink) {
             return this.m_oHttp.get(this.APIURL + '/stations/'+oStationsLink.code);
-        }
+        };
+
+        this.getDavisStations = function (oStationLink) {
+            return this.m_oHttp.get(this.DAVISSTATIONURL + '/stations/'+oStationsLink.code);
+        };
 
         this.getStationsByCode = function(sCode) {
             return this.m_oHttp.get(this.APIURL + '/stations/'+ sCode);

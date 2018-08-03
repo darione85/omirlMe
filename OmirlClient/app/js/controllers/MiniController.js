@@ -159,6 +159,10 @@ var MiniController = (function() {
         this.m_bShowLogin = true;
     }
 
+    MiniController.$onInit = function(){
+
+    };
+
     MiniController.$inject = [
         '$scope',
         '$location',

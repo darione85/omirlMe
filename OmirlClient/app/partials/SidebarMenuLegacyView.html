@@ -64,42 +64,6 @@
                 
             </div>
         </div>
-        <!--
-        <ul class="menu-items-wrapper">
-            <li class='map-firstlevel-icon' 
-                ng-repeat="oItem in getFirstLevelMenuRows()"
-                ng-class="{'map-firstlevel-icon-selected': isActive(oItem.getMenuLink()) == true}"
-                tooltip-popup-delay="500" tooltip="{{oItem.getMenuLink().description | translate}}"
-            >
-                <img class="img-map-firstlevel-icon" 
-                     ng-src="{{oItem.getMenuLink().link}}"
-                     ng-click="mainItemClick(oItem)"
-                     />
-            </li>
-        </ul>
-        <div class="clearfix"></div>
-        <div class='submenu' ng-show="m_bIsSubmenuVisible == true">
-            <ul class="menu-items-wrapper">
-                <li class='map-firstlevel-icon'
-                    ng-repeat="oItem in menuItemsByLevel[1]"
-                    ng-class="{'map-firstlevel-icon-selected': isSubActive(oItem) == true}"
-                    tooltip-popup-delay="500" tooltip="{{oItem.description | translate}}">
-                    <img class="img-map-firstlevel-icon" ng-src="{{oItem.link}}"
-                     ng-click="submenuItemClick(oItem)"/>
-                </li>
-            </ul>
-            <div class="clearfix"></div>
-            
-            <div class="map-text-legend-selected">{{m_sChildText != "" ? m_sChildText : "" | translate}}</div>
-        </div>
-        <!--
-        <div ng-repeat="oTable in m_oController.m_oTableService.getTableLinks()"
-             class="col-md-1 col-xs-1 map-firstlevel-icon"
-             ng-class="{'map-firstlevel-icon-selected': oTable.isActive}"
-             tooltip-popup-delay="500" tooltip="{{oTable.description}}">
-            <img class="img-map-firstlevel-icon" ng-src="{{oTable.imageLinkOff}}"
-                 ng-click="m_oController.m_oTableService.tableLinkClicked(oTable)"/>
-        </div>
-        -->
+
     </div>
 </div>
