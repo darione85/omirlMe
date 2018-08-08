@@ -52,7 +52,7 @@ angular.module('omirl.stationsService', ['omirl.ConstantsService']).
             return this.m_oHttp.get(this.APIURL + '/stations/'+oStationsLink.code);
         };
 
-        this.getDavisStations = function (oStationLink) {
+        this.getDavisStations = function (oStationsLink) {
             return this.m_oHttp.get(this.DAVISSTATIONURL + '/stations/'+oStationsLink.code);
         };
 

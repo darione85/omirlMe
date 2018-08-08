@@ -185,6 +185,7 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
         "hasThirdLevel": false,
         "myLevel": 0,
         "selected":false,
+        "hasDavisStation":true
     },{
         "active": false,
         "clickable": true,
@@ -192,7 +193,7 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
         "code": "Pluvio",
         "count": 50,
             "sensorClass":2,
-        "description": "OMIRLCONFIG_SENSORPLUVIO",
+        "description": "OMIRLCONFIG_SENSORTHERMO",
         "imageLinkInv": "img/sensors/pluviometriInv.png",
         "imageLinkOff": "img/sensors/pluviometriOff.png",
         "imageLinkOn": "img/sensors/pluviometriOn.png",
@@ -291,10 +292,11 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
         "visible": true,
         "hasSubLevel": false,
         "myLevel": 0,
+        "hasDavisStation":true
+
     }];
 
-        this.getCimaImpactFirstLevels= function() {
-            var aoMapLinks = [
+        this.aoCimaImpactLayer= [
                 {
                     "category": "forecast",
                     "dataid": "PAI_COMUNEGE",
@@ -345,7 +347,7 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
                     "isClickable": true,
                     "isVisible": true,
                     "legendLink": "img/sensors/tp01h_pal.png",
-                    "linkCode":"cima-sensors",
+                    "linkCode":"cima-impact",
                 },
                 {
                     "category": "forecast",
@@ -397,14 +399,12 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
                     "isClickable": true,
                     "isVisible": true,
                     "legendLink": "img/sensors/tp01h_pal.png",
-                    "linkCode":"cima-sensors",
+                    "linkCode":"cima-impact",
                 }
             ];
 
-            return aoMapLinks;
-        };
 
-        this.cimaToken = "anywhere%7C1533287411647%7C417d462d-43dd-41ea-8a65-367f0e941aff%3B628";
+
 
 
 
@@ -552,6 +552,12 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
 
             return this.aoCimaSensorsLayer;
         };
+
+        this.getCimaImpactFirstLevels = function () {
+
+            return this.aoCimaImpactLayer;
+        };
+
 
         this.getFeaturesInfo = function (url) {
             return this.m_oHttp.get(url);

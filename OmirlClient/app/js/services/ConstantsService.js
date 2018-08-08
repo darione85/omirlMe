@@ -10,7 +10,11 @@ angular.module('omirl.ConstantsService', []).
         this.URL = 'http://omirl.regione.liguria.it/Omirl';
        // this.URL = 'http://93.62.155.217/Omirl';
         this.APIURL = this.URL + '/rest';
-        this.DAVISSTATIONURL = 'http://213.203.179.36/Omirl/rest';
+
+        this.DAVISSTATIONURL = 'http://213.203.179.36:8080/Omirl/rest';
+
+        this.DDSURL = "http://dds.cimafoundation.org/dewetra2/dewapi/";
+        this.cimaToken = "anywhere%7C1533287411647%7C417d462d-43dd-41ea-8a65-367f0e941aff%3B628";
 
         this.WMSURL = 'http://omirl.regione.liguria.it/geoserver/wms';
        //this.WMSURL = 'http://93.62.155.217:8080/geoserver/wms';
@@ -57,6 +61,9 @@ angular.module('omirl.ConstantsService', []).
             return true;
         }
 
+        this.buildDDSURL=function (url) {
+                return this.DDSURL+url+"?acroweb_token="+this.cimaToken;
+        };
 
         this.setSensorLayerActive = function(oCode) {
             this.m_sSensorLayerActive = oCode;
@@ -335,4 +342,57 @@ angular.module('omirl.ConstantsService', []).
 
             return sDateString;
         }
-    }]);
+
+
+    this.paletteCimaSection = function (feature) {
+        var value = feature.properties.maxvalue;
+        var aoThresholds=[];
+        //cerco le soglie
+        if(value!= -9999&&value!= -7777&&value!= -6666&&value!= -5555){
+            for(var prop in feature.properties){
+                if(prop.indexOf("Q_ALLARME")>-1||prop.indexOf("Q_ALLERTA")>-1){
+                    aoThresholds.push({
+                        prop: feature.properties[prop],
+                        exceded: (value > feature.properties[prop]) ? true : false
+                    })
+                }
+            }
+        }
+        switch (value){
+            case -7777:
+                return "cyan";
+            case  -6666:
+                return "#4d5d53";
+            case  -5555:
+                return "#b1d0ca";
+        }
+
+        if(aoThresholds.length>1){
+            var iSuperati=0;
+            aoThresholds.forEach(function (item) {
+                if(item.exceded)iSuperati++;
+            })
+        }
+
+
+        switch (aoThresholds.length ){
+            case 0:
+                return "gray";
+                break;
+            case 1:
+                if (iSuperati == 1) {return"red";
+                }else {
+                    return (feature.properties.trend>0)?"lime":"white";
+                }
+                break;
+            case 2:
+                if(iSuperati == 1)return "yellow";
+                if (iSuperati == 2)return "red";
+                if (iSuperati == 0){
+                    return (feature.properties.trend>0)?"lime":"white";
+                }
+                break;
+        }
+
+    }
+}]);

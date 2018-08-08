@@ -204,6 +204,11 @@ var MapController = (function () {
         this.m_oSelectedRadarLink = null;
         // Selected Satellite Link
         this.m_oSelectedSatelliteLink = null;
+        // Selected davis station Link
+        this.m_oSelectedCimaSensorsLink = null;
+        // Selected impact Link
+        this.m_oSelectedImpactLink = null;
+
 
         // Test of the Geocoding Query
         this.m_sGeocodingQuery = "";
@@ -253,6 +258,7 @@ var MapController = (function () {
 
         this.m_aoSatelliteLinks = [];
         this.m_aoRadarLinks = [];
+        this.m_aoImpactLinks = [];
 
 
         // Flag to know if the side bar is collapsed or not
@@ -302,6 +308,11 @@ var MapController = (function () {
         this.m_bShowCimaSensors = true;
 
         this.m_bShowCimaImpact = true;
+
+        this.m_bIsImpactFirstLevel = true;
+        this.m_iImpactLevel = 1;
+        this.m_bImpactLayerActive = false;
+        this.m_sImpactLegendSelected = "";
 
 
         // Initialize Layer Service
@@ -495,7 +506,7 @@ var MapController = (function () {
                 if (oControllerVar.m_oConstantsService.isNowMode()) {
                     oControllerVar.m_oReferenceDate = new Date();
                 }
-
+            //refresh callback
                 oControllerVar.refreshFullMap(oControllerVar);
             },
             this.m_oConstantsService.getRefreshRateMs());
@@ -988,7 +999,7 @@ var MapController = (function () {
     }
 
 
-    ///////////////////////////////////////////////////////  MAPS /////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////  MAPS //////////////////RadarLinkClicked///////////////////////////////////////////////////////////
 
 
     /**
@@ -1352,6 +1363,417 @@ var MapController = (function () {
             });
         });
     }
+
+    // cima
+    /**
+     * Function called when a Dynamic  impact Layer is set
+     * @param oMapLink Link to the layer
+     * @param sModifier Modifier of the layer Id
+     */
+    MapController.prototype.selectedImpactDynamicLayer = function (oMapLink, sModifier) {
+        //TODO selectedImpactDynamicLayer
+        if (!angular.isDefined(sModifier)) {
+            sModifier = "none";
+        }
+
+        if (sModifier == "") {
+            sModifier = "none";
+        }
+
+        var oController = this;
+
+        var sLayerCode = oMapLink.linkCode;
+
+        if (oMapLink.linkCode.indexOf(":")>-1)
+        {
+            var asStrings = oMapLink.linkCode.split(":");
+            if (asStrings != null)
+            {
+                sLayerCode = asStrings[1];
+            }
+        }
+
+        var sOldLayerIdentifier = "";
+
+        if (oController.m_oLayerService.getDynamicLayer() != null)
+        {
+            sOldLayerIdentifier = oController.m_oLayerService.getDynamicLayer().params.LAYERS;
+        }
+
+        // oController.m_oMapLayerService.getLayerProperties(oMapLink).success(function (data) {
+        //     oMapLink.layerProp = data;
+        //
+        //     var to = moment.utc(oController.m_oConstantsService.getReferenceDate()).valueOf()/1000;
+        //     var from =moment.utc(oController.m_oConstantsService.getReferenceDate()).subtract(24,"hours").valueOf()/1000;
+        //
+        //     oController.m_oMapLayerService.getLayerAvailability(oMapLink,data,from,to).success(function(data){
+        //         console.log("P");
+        //     })
+        // }).error(function (data) {
+        //
+        //     alert("error loding "+data);
+        //
+        // })
+
+        if(oController.m_oConstantsService.getReferenceDate() != ""){
+            var to = moment.utc(oController.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').valueOf()/1000;
+            var from =moment.utc(oController.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').subtract(24,"hours").valueOf()/1000
+        }else {
+            var to = moment.utc(new Date()).valueOf()/1000;
+            var from =moment.utc(new Date()).subtract(24,"hours").valueOf()/1000
+        }
+
+
+
+
+        oController.m_oMapLayerService.publishLayer(oMapLink, from ,to).success(function (data) {
+            oMapLink.prop = data.properties;
+            oMapLink.item = data.item;
+            oMapLink.layerid = data.layerid;
+
+            var oLayer = new OpenLayers.Layer.WMS(oMapLink.description, oMapLink.server.url+"/wms", {layers: oMapLink.layerid,
+                transparent: "true",
+                format: "image/png"
+            });
+            console.log(oLayer);
+            if (oController.m_oLayerService.getDynamicLayer() != null) {
+                oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+            }
+            oLayer.isBaseLayer = false;
+            oLayer.setOpacity(0.6);
+            // Add the new layer to the map
+            oController.m_oLayerService.setDynamicLayer(oLayer);
+            oController.m_oMapService.map.addLayer(oLayer);
+            oController.m_oMapService.map.setLayerIndex(oLayer, oController.m_oLayerService.getBaseLayers().length);
+        })
+
+
+        //ADDING LAYER IMPACT
+
+        // oController.m_oMapLayerService.getLayerId(sLayerCode, sModifier).success(function (data, status) {
+        //
+        //     //oController.setSelectedMapLinkOnScreen(oController,oMapLink);
+        //
+        //     if (data.layerId != null && data.layerId != sOldLayerIdentifier) {
+        //         // Create WMS Layer
+        //         var oLayer = new OpenLayers.Layer.WMS(oMapLink.description, oMapLink.layerWMS, {
+        //             layers: data.layerId,
+        //             transparent: "true",
+        //             format: "image/png"
+        //         });
+        //         oLayer.isBaseLayer = false;
+        //
+        //         // Remove last one
+        //         if (oController.m_oLayerService.getDynamicLayer() != null) {
+        //             oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+        //         }
+        //
+        //         oLayer.setOpacity(0.6);
+        //         // Add the new layer to the map
+        //         oController.m_oLayerService.setDynamicLayer(oLayer);
+        //         oController.m_oMapService.map.addLayer(oLayer);
+        //         oController.m_oMapService.map.setLayerIndex(oLayer, oController.m_oLayerService.getBaseLayers().length);
+        //
+        //         //set date time
+        //         if (angular.isDefined(data.updateDateTime) && data.updateDateTime != null) {
+        //             var oDate = new Date(data.updateDateTime + " UTC");
+        //             oController.m_oTranslateService('MAP_LAYERDATEINFO', {data: oDate.toString()}).then(function (msg) {
+        //                 oController.m_oSelectedMapDateTimeInfo = msg;
+        //                 oController.m_oSelectedMapDateTimeIcon = oMapLink.link;
+        //             });
+        //         }
+        //
+        //     }
+        //     else if (data.layerId == null)
+        //     {
+        //         //reset date time
+        //         oController.m_oSelectedMapDateTimeIcon = "";
+        //         oController.m_oSelectedMapDateTimeInfo = "";
+        //
+        //         // Remove last one
+        //         if (oController.m_oLayerService.getDynamicLayer() != null) {
+        //             oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+        //             oController.m_oLayerService.setDynamicLayer(null);
+        //         }
+        //
+        //         oController.m_oTranslateService('MAP_NOT_AVAILABLE').then(function(msg){
+        //             oController.activeDirectiveScope.callbackDeselectLastClickedMenuItem(oMapLink.myLevel);
+        //
+        //             vex.dialog.alert({
+        //                 message: msg
+        //             });
+        //
+        //         });
+        //     }
+        // }).error(function (data, status) {
+        //     //oController.setSelectedMapLinkOnScreen(oController,oController.m_oSelectedMapLink);
+        //     oController.m_oTranslateService('ERRORCONTACTSERVER').then(function(error)
+        //     {
+        //         vex.dialog.alert({
+        //             message: error,
+        //         });
+        //         //alert(error);
+        //     });
+        // });
+    }
+
+    /**
+     * Function called when a Dynamic  impact Layer is set
+     * @param oMapLink Link to the layer
+     * @param sModifier Modifier of the layer Id
+     */
+    MapController.prototype.selectedImpactSectionLayer_OLD = function (oMapLink, sModifier) {
+        //TODO selectedImpactSectionLayer
+        if (!angular.isDefined(sModifier)) {
+            sModifier = "none";
+        }
+
+        if (sModifier == "") {
+            sModifier = "none";
+        }
+
+        var oController = this;
+
+        var sLayerCode = oMapLink.linkCode;
+
+        if (oMapLink.linkCode.indexOf(":")>-1)
+        {
+            var asStrings = oMapLink.linkCode.split(":");
+            if (asStrings != null)
+            {
+                sLayerCode = asStrings[1];
+            }
+        }
+
+        var sOldLayerIdentifier = "";
+
+        if (oController.m_oLayerService.getSectionsLayer() != null)
+        {
+            sOldLayerIdentifier = oController.m_oLayerService.getSectionsLayer().params.LAYERS;
+        }
+
+        // oController.m_oMapLayerService.getLayerProperties(oMapLink).success(function (data) {
+        //     oMapLink.layerProp = data;
+        //
+        //     var to = moment.utc(oController.m_oConstantsService.getReferenceDate()).valueOf()/1000;
+        //     var from =moment.utc(oController.m_oConstantsService.getReferenceDate()).subtract(24,"hours").valueOf()/1000;
+        //
+        //     oController.m_oMapLayerService.getLayerAvailability(oMapLink,data,from,to).success(function(data){
+        //         console.log("P");
+        //     })
+        // }).error(function (data) {
+        //
+        //     alert("error loding "+data);
+        //
+        // })
+
+
+        // oController.m_oMapLayerService.getDDSLayerData(oMapLink).success(function(ld){
+        //     oMapLink.layerData = ld;
+        //
+        //     oController.m_oMapLayerService.getFloodProofLayer(oMapLink.server.id,oMapLink.layerData.layer.dataid).success(function (data) {
+        //         oMapLink.theGeoJson = data;
+        //     })
+        //
+        // });
+
+
+        // oController.m_oMapLayerService.publishLayer(oMapLink, from ,to).success(function (data) {
+        //     oMapLink.prop = data.properties;
+        //     oMapLink.item = data.item;
+        //     oMapLink.layerid = data.layerid;
+        //
+        //     var oLayer = new OpenLayers.Layer.WMS(oMapLink.description, oMapLink.server.url+"/wms", {
+        //         layers: oMapLink.layerId,
+        //         transparent: "true",
+        //         format: "image/png"
+        //     });
+        //     console.log(oLayer);
+        //     if (oController.m_oLayerService.getDynamicLayer() != null) {
+        //         oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+        //     }
+        //     oLayer.isBaseLayer = false;
+        //     oLayer.setOpacity(0.6);
+        //     // Add the new layer to the map
+        //     oController.m_oLayerService.setDynamicLayer(oLayer);
+        //     oController.m_oMapService.map.addLayer(oLayer);
+        //     oController.m_oMapService.map.setLayerIndex(oLayer, oController.m_oLayerService.getBaseLayers().length);
+        // })
+
+
+        //ADDING LAYER IMPACT
+
+        // oController.m_oMapLayerService.getLayerId(sLayerCode, sModifier).success(function (data, status) {
+        //
+        //     //oController.setSelectedMapLinkOnScreen(oController,oMapLink);
+        //
+        //     if (data.layerId != null && data.layerId != sOldLayerIdentifier) {
+        //         // Create WMS Layer
+        //         var oLayer = new OpenLayers.Layer.WMS(oMapLink.description, oMapLink.layerWMS, {
+        //             layers: data.layerId,
+        //             transparent: "true",
+        //             format: "image/png"
+        //         });
+        //         oLayer.isBaseLayer = false;
+        //
+        //         // Remove last one
+        //         if (oController.m_oLayerService.getDynamicLayer() != null) {
+        //             oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+        //         }
+        //
+        //         oLayer.setOpacity(0.6);
+        //         // Add the new layer to the map
+        //         oController.m_oLayerService.setDynamicLayer(oLayer);
+        //         oController.m_oMapService.map.addLayer(oLayer);
+        //         oController.m_oMapService.map.setLayerIndex(oLayer, oController.m_oLayerService.getBaseLayers().length);
+        //
+        //         //set date time
+        //         if (angular.isDefined(data.updateDateTime) && data.updateDateTime != null) {
+        //             var oDate = new Date(data.updateDateTime + " UTC");
+        //             oController.m_oTranslateService('MAP_LAYERDATEINFO', {data: oDate.toString()}).then(function (msg) {
+        //                 oController.m_oSelectedMapDateTimeInfo = msg;
+        //                 oController.m_oSelectedMapDateTimeIcon = oMapLink.link;
+        //             });
+        //         }
+        //
+        //     }
+        //     else if (data.layerId == null)
+        //     {
+        //         //reset date time
+        //         oController.m_oSelectedMapDateTimeIcon = "";
+        //         oController.m_oSelectedMapDateTimeInfo = "";
+        //
+        //         // Remove last one
+        //         if (oController.m_oLayerService.getDynamicLayer() != null) {
+        //             oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+        //             oController.m_oLayerService.setDynamicLayer(null);
+        //         }
+        //
+        //         oController.m_oTranslateService('MAP_NOT_AVAILABLE').then(function(msg){
+        //             oController.activeDirectiveScope.callbackDeselectLastClickedMenuItem(oMapLink.myLevel);
+        //
+        //             vex.dialog.alert({
+        //                 message: msg
+        //             });
+        //
+        //         });
+        //     }
+        // }).error(function (data, status) {
+        //     //oController.setSelectedMapLinkOnScreen(oController,oController.m_oSelectedMapLink);
+        //     oController.m_oTranslateService('ERRORCONTACTSERVER').then(function(error)
+        //     {
+        //         vex.dialog.alert({
+        //             message: error,
+        //         });
+        //         //alert(error);
+        //     });
+        // });
+    }
+
+    /**
+     * Function called when a Dynamic Layer is set
+     * @param oMapLink Link to the layer
+     * @param sModifier Modifier of the layer Id
+     */
+    MapController.prototype.selectedImpactDynamicLayer_OLD_OR_ERROR = function (oMapLink, sModifier) {
+
+        if (!angular.isDefined(sModifier)) {
+            sModifier = "none";
+        }
+
+        if (sModifier == "") {
+            sModifier = "none";
+        }
+
+        var oController = this;
+
+        var sLayerCode = oMapLink.linkCode;
+
+        if (oMapLink.linkCode.indexOf(":")>-1)
+        {
+            var asStrings = oMapLink.linkCode.split(":");
+            if (asStrings != null)
+            {
+                sLayerCode = asStrings[1];
+            }
+        }
+
+        var sOldLayerIdentifier = "";
+
+        if (oController.m_oLayerService.getDynamicLayer() != null)
+        {
+            sOldLayerIdentifier = oController.m_oLayerService.getDynamicLayer().params.LAYERS;
+        }
+
+        oController.m_oMapLayerService.getLayerId(sLayerCode, sModifier).success(function (data, status) {
+
+            //oController.setSelectedMapLinkOnScreen(oController,oMapLink);
+
+            if (data.layerId != null && data.layerId != sOldLayerIdentifier) {
+                // Create WMS Layer
+                var oLayer = new OpenLayers.Layer.WMS(oMapLink.description, oMapLink.layerWMS, {
+                    layers: data.layerId,
+                    transparent: "true",
+                    format: "image/png"
+                });
+                oLayer.isBaseLayer = false;
+
+                // Remove last one
+                if (oController.m_oLayerService.getDynamicLayer() != null) {
+                    oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+                }
+
+                oLayer.setOpacity(0.6);
+                // Add the new layer to the map
+                oController.m_oLayerService.setDynamicLayer(oLayer);
+                oController.m_oMapService.map.addLayer(oLayer);
+                oController.m_oMapService.map.setLayerIndex(oLayer, oController.m_oLayerService.getBaseLayers().length);
+
+                //set date time
+                if (angular.isDefined(data.updateDateTime) && data.updateDateTime != null) {
+                    var oDate = new Date(data.updateDateTime + " UTC");
+                    oController.m_oTranslateService('MAP_LAYERDATEINFO', {data: oDate.toString()}).then(function (msg) {
+                        oController.m_oSelectedMapDateTimeInfo = msg;
+                        oController.m_oSelectedMapDateTimeIcon = oMapLink.link;
+                    });
+                }
+
+            }
+            else if (data.layerId == null)
+            {
+                //reset date time
+                oController.m_oSelectedMapDateTimeIcon = "";
+                oController.m_oSelectedMapDateTimeInfo = "";
+
+                // Remove last one
+                if (oController.m_oLayerService.getDynamicLayer() != null) {
+                    oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
+                    oController.m_oLayerService.setDynamicLayer(null);
+                }
+
+                oController.m_oTranslateService('MAP_NOT_AVAILABLE').then(function(msg){
+                    oController.activeDirectiveScope.callbackDeselectLastClickedMenuItem(oMapLink.myLevel);
+
+                    vex.dialog.alert({
+                        message: msg
+                    });
+
+                });
+            }
+        }).error(function (data, status) {
+            //oController.setSelectedMapLinkOnScreen(oController,oController.m_oSelectedMapLink);
+            oController.m_oTranslateService('ERRORCONTACTSERVER').then(function(error)
+            {
+                vex.dialog.alert({
+                    message: error,
+                });
+                //alert(error);
+            });
+        });
+    }
+
+
+    // cima end
 
     /**
      * Function called when a Dynamic Layer is set
@@ -2661,7 +3083,7 @@ var MapController = (function () {
         // Close Popup Div
         sHtml += "</div>";
 
-        // Return HTML
+        // Return HTMLImpactLinkClicked
         return sHtml;
     }
 
@@ -2822,6 +3244,154 @@ var MapController = (function () {
 
     }
 
+// cima
+
+    /**
+     * Function called to show the selected Cima Sections layer
+     * @param oSensorLink
+     */
+    MapController.prototype.showCimaSectionsLayer = function(oSectionLink) {
+
+        var oControllerVar = this;
+
+        
+        // RESET DATE INFO
+        oControllerVar.m_oSelectedSensorDateTimeInfo = "";
+        oControllerVar.m_oSelectedSensorDateTimeIcon = "";
+        // Obtain Stations Values from the server
+
+
+        oControllerVar.m_oMapLayerService.getDDSLayerData(oSectionLink).success(function(ld){
+            oSectionLink.layerData = ld;
+
+            oControllerVar.m_oMapLayerService.getFloodProofLayer(oSectionLink.server.id,oSectionLink.layerData.id).success(function (data, status) {
+                oSectionLink.theGeoJson = data;
+
+                    var aoSections = data.features;
+
+                    if (data != null) {
+
+                        if (data.length>0)
+                        {
+                            //SET DATE INFO
+                            if (angular.isDefined(data[0].updateDateTime) && data[0].updateDateTime != null) {
+                                var oDate = new Date(data[0].updateDateTime + " UTC");
+                                oControllerVar.m_oTranslateService('MAP_SECTIONDATEINFO', {data: oDate.toString()}).then(function (msg) {
+                                    oControllerVar.m_oSelectedSensorDateTimeInfo = msg;
+                                    oControllerVar.m_oSelectedSensorDateTimeIcon = oSectionLink.imageLinkOff;
+                                });
+                            }
+                        }
+                    }
+
+                    try{
+
+                        while( oControllerVar.m_oMapService.map.popups.length ) {
+                            oControllerVar.m_oMapService.map.removePopup(oControllerVar.m_oMapService.map.popups[0]);
+                        }
+
+                        // remove the actual Sensors Layer from the map
+                        oControllerVar.m_oMapService.map.removeLayer(oControllerVar.m_oLayerService.getSectionsLayer("Cima"));
+
+                    }
+                    catch (err) {
+
+                    }
+
+                    // Clear the layer
+                    oControllerVar.m_oLayerService.getSectionsLayer().destroyFeatures();
+
+                    // Projection change for points
+                    var epsg4326 =  new OpenLayers.Projection("EPSG:4326"); //WGS 1984 projection
+                    var projectTo = oControllerVar.m_oMapService.map.getProjectionObject(); //The map projection (Spherical Mercator)
+
+                    // For each station
+                    var iSections;
+                    var aoFeatures = [];
+
+                    // aoSections.sort(oControllerVar.compareStations);
+
+                    for ( iSections =0; iSections<aoSections.length; iSections++) {
+                        var oSection = aoSections[iSections];
+
+                        // Create the feature
+                        var oFeature = new OpenLayers.Feature.Vector(
+                            new OpenLayers.Geometry.Point(oSection.geometry.coordinates[0], oSection.geometry.coordinates[1]).transform(epsg4326, projectTo),
+                            {description: oSection.properties.sezione}
+                            //,{externalGraphic: oStation.imgPath, graphicHeight: 32, graphicWidth: 32, graphicXOffset:0, graphicYOffset:0, title: oStation.name + " " + oStation.value }
+                            //,{title: oStation.name + " " + oStation.value }
+                        );
+
+                        var value = aoSections[iSections].properties.maxvalue;
+
+
+                        // if (angular.isUndefined(oSection.color)) oSection.color=oControllerVar.m_oConstantsService.paletteCimaSection(aoSections[iSections]);
+
+                        // Set attributes of the Feature
+                        oFeature.attributes = angular.copy(aoSections[iSections].properties);
+                        oFeature.attributes.opacity = 1;
+
+
+
+
+                        // Add the feature to the array
+                        aoFeatures.push(oFeature);
+                    }
+
+                    // Add feature array to the layer
+                    oControllerVar.m_oLayerService.getSectionsLayer("Cima").addFeatures(aoFeatures);
+
+                    // Add the layer to the map
+                    oControllerVar.m_oMapService.map.addLayer(oControllerVar.m_oLayerService.getSectionsLayer("Cima"));
+                    // oControllerVar.m_oMapService.map.addLayer(oSectionLink.theGeoJson);
+
+                    oControllerVar.m_oMapService.map.setLayerIndex(oControllerVar.m_oLayerService.getSectionsLayer(), oControllerVar.m_oLayerService.getSectionsLayerIndex());
+
+                    // Feature Click and Hover Control: added?
+                    if (oControllerVar.m_oMapService.sectionsPopupControllerAdded == false) {
+
+                        // No: take a reference to the map controller
+                        var oMapController = oControllerVar;
+
+                        // Create the Control
+                        var oPopupCtrl = new OpenLayers.Control.SelectFeature(oControllerVar.m_oLayerService.getSectionsLayer(), {
+                            hover: true,
+                            onSelect: function(feature) {
+                                // Hover Select: call internal function
+                                oMapController.showSectionsPopup(feature);
+                            },
+                            onUnselect: function(feature) {
+                                // Hover Unselect: remove pop up
+                                feature.layer.map.removePopup(feature.popup);
+                            },
+                            callbacks: {
+                                // Click
+                                click: function(feature) {
+                                    if (feature.attributes.color != -1) {
+                                        // Show chart
+                                        oMapController.showSectionChart(feature);
+                                    }
+                                }
+                            }
+                        });
+
+                        // Add and activate the control
+                        oControllerVar.m_oMapService.map.addControl(oPopupCtrl);
+                        oPopupCtrl.activate();
+
+                        // Remember it exists now
+                        oControllerVar.m_oMapService.sectionsPopupControllerAdded = true;
+                    }
+
+            })
+
+        });
+
+
+
+    }
+
+    // cima end
 
     /**
      * Hide sections layer
@@ -2985,6 +3555,239 @@ var MapController = (function () {
 
         return this.m_aoRadarLinks;
     }
+
+    //dario impact
+
+    /**
+     * Method called when an impact link is clicked
+     * @param oImpactLinl
+     * @constructor
+     */
+    MapController.prototype.ImpactLinkClicked = function(oImpactLink, oController)
+    {
+        if( !oController )
+            oController = this;
+
+        // Hydro Link = null stands for back: impossible to have back on first level
+        if (oController.m_bIsImpactFirstLevel && oImpactLink == null) return;
+
+        // var to know if this is the selected entry
+        var bIsSelected = false;
+
+        // Remember Controller ref
+        var oControllerVar = oController;
+
+        // Is this a Map Link Click?
+        if (oImpactLink != null) {
+            // Write on screen the Selected Layer description
+            if (!oController.m_bImpactLayerActive)
+            {
+                oController.m_sImpactLastLegendSelected = oController.m_sImpactLegendSelected;
+                oController.m_sImpactLegendSelected = oImpactLink.description;
+            }
+            // Remember if it was selected or not
+            bIsSelected = oImpactLink.selected;
+        }
+        else {
+            if (!oController.m_bRadarLayerActive) {
+                if (oController.m_iRadarLevel == 2) {
+                    oController.m_sRadarLegendSelected = "";
+                }
+                else {
+                    oController.m_sImpactLegendSelected = oController.m_sImpactLastLegendSelected;
+                }
+            }
+        }
+
+        // Clear all selection flags
+        oController.m_aoImpactLinks.forEach(function(oEntry) {
+            oEntry.selected = false;
+        });
+
+        if (oController.m_aoMenuDirectives[oController.MENU_SATELLITE])
+            oController.m_aoMenuDirectives[oController.MENU_SATELLITE].resetDirectiveSelections();
+        if(oController.m_oSelectedSatelliteLink) {
+            if (oController.m_oSelectedSatelliteLink.selected)
+                oController.m_oSelectedSatelliteLink.selected = false;
+            oController.m_oSelectedSatelliteLink = null;
+        }
+
+        // We are in the first level?
+        if (oController.m_bIsImpactFirstLevel)
+        {
+            oController.m_aoMenuLinks[oController.MENU_CIMA_IMPACT][oController.MENU_LEVEL_1].forEach(function(oEntry)
+            {
+                if( oEntry.description != oImpactLink.description)
+                    oEntry.selected = false;
+            });
+
+            if (oImpactLink.hasChilds) {
+                // Remember we are in second level
+                oController.m_bIsImpactFirstLevel= false;
+
+                oController.m_iRadarLevel = 2;
+
+                // Clear variables
+                oControllerVar.m_aoImpactLinks = [];
+
+                // Get second level from server
+                oController.m_oMapNavigatorService.getRadarSecondLevels(oImpactLink.linkCode).success(function(data,status) {
+
+                    //******************************************************************
+                    // Add the flag to indicate the menu link item level and
+                    // if the menu link has a sub-level.
+                    // or not. These parametere should come from server but, at the
+                    // moment, are initialized here
+                    for(var key in data)
+                    {
+                        data[key].hasSubLevel = data[key].hasChilds;
+                        data[key].myLevel = 2;
+                    }
+                    //******************************************************************
+
+                    // Second Level Icons
+                    oControllerVar.m_aoRadarLinks = data;
+                    oControllerVar.m_aoMenuLinks[oControllerVar.MENU_RADAR][oControllerVar.MENU_LEVEL_2] = data;
+
+
+                    // Is there any Map selected?
+                    if (oControllerVar.m_oSelectedRadarLink != null) {
+
+                        //Is One of these links the one selected?
+                        var iCount;
+                        for (iCount = 0; iCount< oControllerVar.m_aoRadarLinks.length; iCount++) {
+
+                            // Check by Layer Id
+                            if (oControllerVar.m_aoRadarLinks[iCount].linkCode == oControllerVar.m_oSelectedRadarLink.linkCode) {
+
+                                // This is the selected one!!
+                                oControllerVar.setSelectedRadarLinkOnScreen(oControllerVar, oControllerVar.m_aoRadarLinks[iCount]);
+
+                                break;
+                            }
+                        }
+                    }
+
+                }).error(function(data,status){
+                    oControllerVar.m_oLog.error('Error contacting DDS Server');
+                });
+            }
+            else {
+                oController.switchImpactLinkState(bIsSelected, oImpactLink);
+            }
+        }
+        else if (oController.m_iRadarLevel==2) {
+            // We are in second level
+            if (oImpactLink == null) {
+                // Back: get first levels
+                oController.m_aoRadarLinks = oController.m_oMapNavigatorService.getRadarFirstLevels();
+                oController.m_bIsRadarFirstLevel = true;
+                oController.m_iRadarLevel = 1;
+            }
+            else {
+                // Switch to show or not third level
+                if (oImpactLink.hasThirdLevel) {
+                    oController.m_iRadarLevel= 3;
+
+                    var oRadarLinkCopy = oImpactLink;
+                    var oControllerVar = this;
+
+                    // Get third levels from the service
+                    oController.m_oMapNavigatorService.getRadarThirdLevel(oImpactLink.linkCode).success(function(data,status) {
+
+                        //******************************************************************
+                        // Add the flag to indicate the menu link item level and
+                        // if the menu link has a sub-level.
+                        // or not. These parametere should come from server but, at the
+                        // moment, are initialized here
+                        for(var key in data)
+                        {
+                            data[key].hasSubLevel = data[key].hasChilds;
+                            data[key].myLevel = 3;
+                        }
+                        //******************************************************************
+                        //
+                        // Third Level Icons
+                        oControllerVar.m_aoRadarLinks = data;
+                        oControllerVar.m_aoMenuLinks[oControllerVar.MENU_RADAR][oControllerVar.MENU_LEVEL_3] = data;
+
+
+                        // Is there any Map selected?
+                        if (oControllerVar.m_oSelectedRadarLink != null) {
+
+                            //Is One of these links the one selected?
+                            var iCount;
+                            for (iCount = 0; iCount< oControllerVar.m_aoRadarLinks.length; iCount++) {
+
+                                // Check by Layer Id
+                                if (oControllerVar.m_aoRadarLinks[iCount].linkCode == oControllerVar.m_oSelectedRadarLink.linkCode) {
+
+                                    // This is the selected one!!
+                                    oControllerVar.setSelectedRadarLinkOnScreen(oControllerVar, oControllerVar.m_aoRadarLinks[iCount]);
+
+                                    break;
+                                }
+                            }
+                        }
+
+                    }).error(function(data,status){
+                        oControllerVar.m_oLog.error('Error contacting Omirl Server');
+                    });
+
+                }
+                else {
+                    oController.switchImpactLinkState(bIsSelected, oImpactLink);
+                }
+            }
+        }
+        else if (oController.m_iRadarLevel==3)
+        {
+            // We are in third level
+            if (oImpactLink == null)
+            {
+                // Back: get second levels
+                oController.m_oMapNavigatorService.getRadarSecondLevels(oController.m_aoRadarLinks[0].parentLinkCode).success(function(data,status) {
+
+                    // Second Level Icons
+                    oControllerVar.m_aoRadarLinks = data;
+                    oControllerVar.m_bIsRadarFirstLevel = false;
+                    oControllerVar.m_iRadarLevel= 2;
+
+                    if (!oControllerVar.m_bRadarLayerActive)
+                    {
+                        oControllerVar.m_sRadarLegendSelected = data[0].parentDescription;
+                    }
+
+                    if (oControllerVar.m_oSelectedRadarLink!=null)
+                    {
+                        //Is One of these links the one selected?
+                        var iCount;
+                        for (iCount = 0; iCount< oControllerVar.m_aoRadarLinks.length; iCount++) {
+
+                            // Check by Layer Id
+                            if (oControllerVar.m_aoRadarLinks[iCount].linkCode == oControllerVar.m_oSelectedRadarLink.linkCode) {
+
+                                // This is the selected one!!
+                                oControllerVar.setSelectedRadarLinkOnScreen(oControllerVar, oControllerVar.m_aoRadarLinks[iCount]);
+
+                                break;
+                            }
+                        }
+                    }
+
+                }).error(function(data,status){
+                    oControllerVar.m_oLog.error('Error contacting Omirl Server');
+                });
+            }
+            else
+            {
+                oController.switchRadarLinkState(bIsSelected, oImpactLink);
+            }
+        }
+    }
+
+    //dario impact end
+
 
     /**
      * Method called when an Radar link is clicked
@@ -3264,6 +4067,79 @@ var MapController = (function () {
             this.m_oSelectedMapDateTimeIcon = "";
         }
     }
+
+    // cima
+    MapController.prototype.switchImpactLinkState = function(bIsSelected, oRadarLink) {
+
+        // Remove from the map
+        oRadarLink.selected = false;
+        if (this.m_oLayerService.getDynamicLayer() != null) {
+            this.m_oMapService.map.removeLayer(this.m_oLayerService.getDynamicLayer());
+            this.m_oLayerService.setDynamicLayer(null);
+            this.m_bDynamicLayerActive = false;
+        }
+
+        if (!bIsSelected)
+        {
+            // TODO: Qui pulire direttiva Mappe e Satelliti
+            if( this.m_aoMenuDirectives[this.MENU_MAPS] && this.m_aoMenuDirectives[this.MENU_SATELLITE])
+            {
+                this.m_aoMenuDirectives[this.MENU_MAPS].resetDirectiveSelections();
+                this.m_aoMenuDirectives[this.MENU_SATELLITE].resetDirectiveSelections();
+            }
+
+            this.m_oSelectedMapLink = null;
+            this.m_oSelectedSatelliteLink = null;
+            this.m_bSatelliteLayerActive = false;
+            this.m_sSatelliteLegendPath = "";
+            this.m_sSatelliteLegendTooltip = "";
+            this.m_sSatelliteLegendIconPath = "";
+
+            this.setSelectedImpactLinkOnScreen(this,oRadarLink);
+            this.selectedRadarSatDynamicLayer(oRadarLink, "none");
+            //alert('attivo ' + oRadarLink.description);
+        }
+        else
+        {
+
+
+
+            //alert('DISattivo ' + oRadarLink.description);
+
+            this.m_sRadarLegendSelected = oRadarLink.parentDescription;
+            this.m_bRadarLayerActive = false;
+            this.m_sRadarLegendPath = "";
+            this.m_sRadarLegendTooltip = "";
+            this.m_sRadarLegendIconPath = "";
+
+            this.m_oSelectedRadarLink = null;
+
+            this.m_oSelectedMapDateTimeInfo = "";
+            this.m_oSelectedMapDateTimeIcon = "";
+        }
+    }
+
+    /**
+     * Sets all needed variables to show selected Radar Link on screen
+     * @param oControllerVar
+     * @param oMapLink
+     */
+    MapController.prototype.setSelectedImpactLinkOnScreen = function (oControllerVar, oImpactLink) {
+
+        oImpactLink.selected = true;
+        // Layer Click
+        oControllerVar.m_sRadarLegendIconPath = oImpactLink.link;
+        this.m_oTranslateService(oImpactLink.description).then(function(text){
+            oControllerVar.m_sRadarLegendTooltip = oControllerVar.m_sLegendPrefix + " " + text;
+        });
+        //oControllerVar.m_sRadarLegendTooltip = "Legenda " + oRadarLink.description;
+        oControllerVar.m_sImpactLegendSelected = oImpactLink.description;
+        oControllerVar.m_bImpactLayerActive = true;
+        oControllerVar.m_sImpactLegendPath = oImpactLink.legendLink;
+        oControllerVar.m_oSelectedImpactLink = oImpactLink;
+    }
+
+    // cima end
 
     /**
      * Sets all needed variables to show selected Radar Link on screen
@@ -3566,7 +4442,7 @@ var MapController = (function () {
             oController.hideSectionLayer();
 
             // Set //qui in realtà chiamerò lo stesso metodo omirl con url differente
-            oController.showCimaStationsLayer(oCimaSensorLink);
+            oController.showStationsLayer(oCimaSensorLink);
 
             oController.m_bSensorLayerActive = true;
             oController.m_sSensorsLegendPath = oCimaSensorLink.legendLink;
@@ -3645,6 +4521,158 @@ var MapController = (function () {
         }
     }
 
+    // cima
+    /**
+     * Called to show or hyde a Impact link
+     * @param bIsSelected
+     * @param oImpactLink
+     */
+    MapController.prototype.switchImpactLinkState = function(bIsSelected, oImpactLink) {
+
+        // Remove from the map
+        if (this.m_oLayerService.getDynamicLayer() != null) {
+            this.m_oMapService.map.removeLayer(this.m_oLayerService.getDynamicLayer());
+            this.m_oLayerService.setDynamicLayer(null);
+            this.m_bDynamicLayerActive = false;
+        }
+
+        if (!bIsSelected)
+        {
+            // TODO: Qui pulire direttiva Mappe e Radar
+            if(this.m_aoMenuDirectives[this.MENU_MAPS] && this.m_aoMenuDirectives[this.MENU_RADAR])
+            {
+                this.m_aoMenuDirectives[this.MENU_MAPS].resetDirectiveSelections();
+                this.m_aoMenuDirectives[this.MENU_RADAR].resetDirectiveSelections();
+            }
+
+            this.m_oSelectedMapLink = null;
+            this.m_oSelectedImpactLink = null;
+            this.m_bImpactLayerActive = false;
+            this.m_sImpactLegendPath = "";
+            this.m_sImpactLegendTooltip = "";
+            this.m_sImpactLegendIconPath = "";
+
+            this.setSelectedImpactLinkOnScreen(this,oImpactLink);
+            //choose kind of impact
+            if (oImpactLink.type.code =="section_probabilistic_lami"){
+                this.showCimaSectionsLayer(oImpactLink,"none");
+            }else{
+                this.selectedImpactDynamicLayer(oImpactLink, "none");
+            }
+
+            //alert('attivo ' + oSatelliteLink.description);
+        }
+        else
+        {
+
+            oImpactLink.selected = false;
+
+            if (oImpactLink.type.code ="section_probabilistic_lami"){
+                this.m_oLayerService.getSectionsLayer().destroyFeatures();
+            }else{
+                this.m_oMapService.map.removeLayer(this.m_oLayerService.getDynamicLayer());
+            }
+
+            //alert('DISattivo ' + oSatelliteLink.description);
+
+            this.m_sImpactLegendSelected = oImpactLink.parentDescription;
+            this.m_bImpactLayerActive = false;
+            this.m_sImpactLegendPath= "";
+            this.m_sImpactLegendTooltip = "";
+            this.m_sImpactLegendIconPath = "";
+
+            this.m_oSelectedImpactLink = null;
+
+        }
+    }
+
+
+    /**
+     * Called to show or hyde a Impact link
+     * @param bIsSelected
+     * @param oImpactLink
+     */
+    MapController.prototype.switchCimaSensorsState = function(bIsSelected, oImpactLink) {
+
+        // Remove from the map
+        if (this.m_oLayerService.getDynamicLayer() != null) {
+            this.m_oMapService.map.removeLayer(this.m_oLayerService.getDynamicLayer());
+            this.m_oLayerService.setDynamicLayer(null);
+            this.m_bDynamicLayerActive = false;
+        }
+
+        if (!bIsSelected)
+        {
+            // TODO: Qui pulire direttiva Mappe e Radar
+            if(this.m_aoMenuDirectives[this.MENU_MAPS] && this.m_aoMenuDirectives[this.MENU_RADAR])
+            {
+                this.m_aoMenuDirectives[this.MENU_MAPS].resetDirectiveSelections();
+                this.m_aoMenuDirectives[this.MENU_RADAR].resetDirectiveSelections();
+            }
+
+            this.m_oSelectedMapLink = null;
+            this.m_oSelectedImpactLink = null;
+            this.m_bImpactLayerActive = false;
+            this.m_sImpactLegendPath = "";
+            this.m_sImpactLegendTooltip = "";
+            this.m_sImpactLegendIconPath = "";
+
+            this.setSelectedImpactLinkOnScreen(this,oImpactLink);
+            //choose kind of impact
+            if (oImpactLink.type.code ="section_probabilistic_lami"){
+                this.showCimaSectionsLayer(oImpactLink,"none");
+            }else{
+                this.selectedImpactDynamicLayer(oImpactLink, "none");
+            }
+
+            //alert('attivo ' + oSatelliteLink.description);
+        }
+        else
+        {
+
+            oImpactLink.selected = false;
+
+            if (oImpactLink.type.code ="section_probabilistic_lami"){
+                this.m_oLayerService.getSectionsLayer().destroyFeatures();
+            }else{
+                this.m_oMapService.map.removeLayer(this.m_oLayerService.getDynamicLayer());
+            }
+
+            //alert('DISattivo ' + oSatelliteLink.description);
+
+            this.m_sImpactLegendSelected = oImpactLink.parentDescription;
+            this.m_bImpactLayerActive = false;
+            this.m_sImpactLegendPath= "";
+            this.m_sImpactLegendTooltip = "";
+            this.m_sImpactLegendIconPath = "";
+
+            this.m_oSelectedImpactLink = null;
+
+        }
+    }
+
+
+    /**
+ * Sets all needed variables to show selected Radar Link on screen
+ * @param oControllerVar
+ * @param oMapLink
+ */
+MapController.prototype.setSelectedImpactLinkOnScreen = function (oControllerVar, oImpactLink) {
+
+    oImpactLink.selected = true;
+    // Layer Click
+    oControllerVar.m_sImpactLegendIconPath = oImpactLink.link;
+    this.m_oTranslateService(oImpactLink.description).then(function(text){
+        oControllerVar.m_sImpactLegendTooltip = oControllerVar.m_sLegendPrefix + " " + text;
+    });
+    //oControllerVar.m_sImpactLegendTooltip = "Legenda " + oImpactLink.description;
+    oControllerVar.m_sImpactLegendSelected = oImpactLink.description;
+    oControllerVar.m_bImpactLayerActive = true;
+    oControllerVar.m_sImpactLegendPath = oImpactLink.legendLink;
+    oControllerVar.m_oSelectedImpactLink = oImpactLink;
+}
+
+    // cima end
     /**
      * Sets all needed variables to show selected Radar Link on screen
      * @param oControllerVar
@@ -3715,6 +4743,22 @@ var MapController = (function () {
         {
             oController.switchSatelliteLinkState(false, oController.m_oSelectedSatelliteLink);
         }
+
+        // Selected cima Sensors Link
+        if (oController.m_oSelectedCimaSensorsLink!= null)
+        {
+            //TODO switchCimaSensorsLinkState
+            oController.switchCimaSensorsLinkState(false, oController.m_oSelectedCimaSensorsLink);
+        }
+
+        // Selected Satellite Link
+        if (oController.m_oSelectedImpactLink != null)
+        {
+
+            //TODO switchImpactLinkState
+            oController.switchImpactLinkState(false, oController.m_oSelectedImpactLink);
+        }
+
 
     }
 

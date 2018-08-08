@@ -227,11 +227,11 @@ angular.module('az.services').factory('az.services.layersService',function($root
          * Gets the Sections layer
          * @returns {null}
          */
-        getSectionsLayer: function() {
+        getSectionsLayer: function(string) {
 
             if (this.m_oSectionsLayer == null) {
                 // No: create it
-                var oStyleMap = new OpenLayers.StyleMap(this.getSectionsLayerStyle());
+                var oStyleMap = (string)?new OpenLayers.StyleMap(this.getCimaSectionsLayerStyle()): new OpenLayers.StyleMap(this.getSectionsLayerStyle());
                 this.m_oSectionsLayer = new OpenLayers.Layer.Vector("Sezioni", {
                     styleMap: oStyleMap,
                     rendererOptions: {zIndexing: true}
@@ -638,6 +638,131 @@ angular.module('az.services').factory('az.services.layersService',function($root
                         }
                         catch (e) {
                             return "#FFFFFF";
+                        }
+                    },
+                    opacityFunction: function(feature) {
+                        if (feature.attributes.opacity==-1.0)
+                        {
+                            return 0.9;
+                        }
+                        return feature.attributes.opacity;
+                    },
+                    strokeColorFunction: function(feature) {
+                        return "#000000";
+                    },
+                    graphicNameFunction: function(feature) {
+                        return 'circle';
+                    },
+                    rotationFunction: function(feature) {
+                        return 0;
+                    },
+                    externalGraphicFunction: function(feature) {
+                        return '';
+                    },
+                    externalGraphicSize: function(feature) {
+                        return 0;
+                    }
+                }
+            });
+
+            return style;
+        },
+
+        /**
+         * Creates an Open Layer style for stations Data
+         * @returns {OpenLayers.Style}
+         */
+        getCimaSectionsLayerStyle: function() {
+            // Define three rules to style the cluster features.
+            var lowRule = new OpenLayers.Rule({
+                symbolizer: {
+                    fillColor: "${colorFunction}",
+                    fillOpacity: "${opacityFunction}",
+                    strokeColor: "${strokeColorFunction}",
+                    strokeOpacity: "${strokeOpacityFunction}",
+                    strokeWidth: "${strokeWidthFunction}",
+                    pointRadius: "${radiusFunction}",
+                    label: "${valueFunction}",
+                    'labelOutlineColor' : "${colorFunction}",
+                    labelOutlineWidth: 2,
+                    fontColor: "#ffffff",
+                    fontOpacity: 0.8,
+                    fontSize: "12px",
+                    graphicName: '${graphicNameFunction}',
+                    rotation: "${rotationFunction}",
+                    externalGraphic: '${externalGraphicFunction}',
+                    graphicWidth: '${externalGraphicSize}',
+                    graphicHeight: '${externalGraphicSize}'
+                }
+            });
+
+            var oService = this;
+
+            // Create a Style that uses the three previous rules
+            var style = new OpenLayers.Style(null, {
+                rules: [lowRule],
+                context: {
+                    valueFunction: function(feature) {
+                        return "";
+                    },
+                    radiusFunction: function(feature) {
+                        return 5;
+                    },
+                    strokeWidthFunction: function(feature) {
+                        return 2;
+                    },
+                    strokeOpacityFunction: function(feature) {
+                        return 1;
+                    },
+                    colorFunction: function(feature) {
+
+                        var value = feature.attributes.maxvalue;
+                        var aoThresholds=[];
+                        //cerco le soglie
+                        if(value!= -9999&&value!= -7777&&value!= -6666&&value!= -5555){
+                            for(var prop in feature.attributes){
+                                if(prop.indexOf("Q_ALLARME")>-1||prop.indexOf("Q_ALLERTA")>-1){
+                                    aoThresholds.push({
+                                        prop: feature.attributes[prop],
+                                        exceded: (value > feature.attributes[prop]) ? true : false
+                                    })
+                                }
+                            }
+                        }
+                        switch (value){
+                            case -7777:
+                                return "#00FFFF";
+                            case  -6666:
+                                return "#4d5d53";
+                            case  -5555:
+                                return "#b1d0ca";
+                        }
+
+                        if(aoThresholds.length>1){
+                            var iSuperati=0;
+                            aoThresholds.forEach(function (item) {
+                                if(item.exceded)iSuperati++;
+                            })
+                        }
+
+
+                        switch (aoThresholds.length ){
+                            case 0:
+                                return "#D3D3D3";
+                                break;
+                            case 1:
+                                if (iSuperati == 1) {return"#FF0000";
+                                }else {
+                                    return (feature.attributes.trend>0)?"#00FF00":"#FFFFFF";
+                                }
+                                break;
+                            case 2:
+                                if(iSuperati == 1)return "#FFFF00";
+                                if (iSuperati == 2)return "#FF0000";
+                                if (iSuperati == 0){
+                                    return (feature.attributes.trend>0)?"#00FF00":"#FFFFFF";
+                                }
+                                break;
                         }
                     },
                     opacityFunction: function(feature) {
