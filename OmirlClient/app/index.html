@@ -73,6 +73,8 @@
 
     <!-- MOMENT -->
     <script src="lib/moment/moment-with-locales.js"></script>
+    <!--underscore-->
+    <script src="lib/underscore/underscore-min.js"></script>
     
     <!-- Vex (a modern Dialogs lib) -->
     <script src="lib/vex-dialogs/2.3.2/vex.min.js"></script>
@@ -152,6 +154,7 @@
     <script src="js/controllers/SummaryTableController.js"></script>
     <script src="js/controllers/ModelsTableController.js"></script>
     <script src="js/controllers/SectionChartController.js"></script>
+    <script src="js/controllers/SectionCimaChartController.js"></script>
     <script src="js/controllers/ModelsGalleryController.js"></script>
     <script src="js/controllers/MaxHydroAlertZoneController.js"></script>
     <script src="js/filters.js"></script>
@@ -578,8 +581,62 @@ dialogCtrl controller in app.js.
         <!--div omirl-high-chart="{{model.stationCode}}" style="height: 400px; min-width: 310px; width: 550px"></div-->
         <div class="img-resize-ratio">
             <!--Add this for elevate zoom 'elevate-zoom data-zoom-image="{{m_oController.getImageLink()}}"' -->
-            <img ng-src="{{m_oController.getImageLink()}}" >
+            <!--<img ng-src="{{m_oController.getImageLink()}}" >-->
+
         </div>
+
+        <div ng-repeat="oOtherChart in m_oController.getOtherLinks()"
+             class="col-md-1 col-xs-1 map-firstlevel-icon"
+             ng-class="{'map-firstlevel-icon-selected': oOtherChart.isActive}"
+             tooltip-popup-delay="500" tooltip="{{oOtherChart.description | translate}}">
+            <img class="img-map-firstlevel-icon" ng-src="{{oOtherChart.imageLinkOff}}"
+                 ng-click="m_oController.otherLinkClicked(oOtherChart)"/>
+        </div>
+
+        <div class="col-md-1 col-xs-1 map-firstlevel-icon"
+             tooltip-popup-delay="500" alt="{{'INDEX_T_INGRANDISCI' | translate}}" tooltip="{{'INDEX_T_INGRANDISCI' | translate}}">
+            <img class="img-map-firstlevel-icon" src="img/zoom_in.png"
+                 ng-click="m_oController.zoomIn()"/>
+        </div>
+
+        <div class="col-md-1 col-xs-1 map-firstlevel-icon"
+             tooltip-popup-delay="500" alt="{{'INDEX_T_RIDUCI' | translate}}" tooltip="{{'INDEX_T_RIDUCI' | translate}}">
+            <img class="img-map-firstlevel-icon" src="img/zoom_out.png"
+                 ng-click="m_oController.zoomOut()"/>
+        </div>
+
+
+    </div>
+</script>
+
+<!--
+This is the template for the main dialog that is displayed. It uses the
+dialogCtrl controller in app.js.
+-->
+<script type="text/ng-template" id="sectionCimaChart.html">
+    <div ng-controller="SectionCimaChartController" >
+        <!--<div id="loading" class="loading" ng-show="m_oController.isLoadingVisibile()" ></div>-->
+        <!--div omirl-high-stock="{{model.stationCode}}" style="height: 400px; min-width: 310px; width: 550px"></div-->
+        <!--div omirl-high-chart="{{model.stationCode}}" style="height: 400px; min-width: 310px; width: 550px"></div-->
+
+        <!--<ul class="nav nav-tabs">-->
+            <!--<li class="active">-->
+                <!--<a href="#1" data-toggle="tab">Tab 1</a>-->
+            <!--</li>-->
+            <!--<li >-->
+                <!--<a href="#2" data-toggle="tab">Tab 2</a>-->
+            <!--</li>-->
+        <!--</ul>-->
+
+        <ul class="nav nav-tabs">
+            <li ng-repeat="hydrogram in aoHydrograms">
+                <a href="#{{$index}}" data-toggle="tab" ng-click="m_oController.chartType(hydrogram.type)"> {{hydrogram.title}}</a>
+            </li>
+        </ul>
+
+
+
+        <div cima-section-high-chart="m_oController" ng-style="{ 'height': m_oController.getHeight(), 'min-width': m_oController.getMinWidth(), 'width': m_oController.getWidth()}"></div>
 
         <div ng-repeat="oOtherChart in m_oController.getOtherLinks()"
              class="col-md-1 col-xs-1 map-firstlevel-icon"

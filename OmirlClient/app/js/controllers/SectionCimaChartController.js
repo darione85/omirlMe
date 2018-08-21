@@ -1,8 +1,8 @@
 /**
  * Created by p.campanella on 23/03/2015.
  */
-var SectionChartController = (function() {
-    function SectionChartController($scope, dialogService, oChartService, $timeout, oConstantsService, $log, $translate) {
+var SectionCimaChartController = (function() {
+    function SectionCimaChartController($scope, dialogService, oChartService, $timeout, oConstantsService, $log, $translate) {
         this.m_oScope = $scope;
         this.m_oScope.m_oController = this;
         this.m_oDialogService = dialogService;
@@ -19,9 +19,15 @@ var SectionChartController = (function() {
 
         this.m_sImageLink = "img/nodata.jpg"
 
+        this.m_sDDSserieId = this.m_oScope.model.ddsSerieId;
         this.m_sSectionCode = this.m_oScope.model.sectionCode;
         this.m_sChartType = this.m_oScope.model.chartType;
         this.m_sSubFolder = this.m_oScope.model.subFolder;
+
+
+
+        this.m_oScope.aoHydrograms=[];
+        this.m_oScope.bChartLoader = false;
 
         this.m_iHeight = 600;
         this.m_iWidth = 750;
@@ -33,7 +39,7 @@ var SectionChartController = (function() {
     }
 
 
-    SectionChartController.prototype.getImageLink = function() {
+    SectionCimaChartController.prototype.getImageLink = function() {
         //return this.m_sImageLink;
 
         var sBaseAddress = this.m_oConstantsService.getURL();
@@ -41,89 +47,153 @@ var SectionChartController = (function() {
         return sBaseAddress + '/' + this.m_sImageLink;
     }
 
-    SectionChartController.prototype.LoadData = function () {
+    SectionCimaChartController.prototype.chartId =function(){
+        return "chart-"+this.m_sSectionCode;
+    };
+
+    SectionCimaChartController.prototype.chartType = function (id) {
+        this.m_sChartType = id;
+    };
+
+    SectionCimaChartController.prototype.LoadChart = function () {
+        console.log()
+    };
+
+    SectionCimaChartController.prototype.LoadData = function () {
         var oControllerVar = this;
 
-        oControllerVar.m_oChartService.getSectionChart(this.m_sSectionCode,this.m_sChartType).success(function(data,status) {
+        //comunege.idro.probabilisticlami
+        oControllerVar.m_oChartService.loadFloodProofsCompatibles('1/'+this.m_oDialogModel.ddsSerieId+"/").success(function (data) {
+            // console.log(data)
+            // data[0].type = "MaximumHydrogramChart;ProbabilisticHydrogramChart";
+            var counter = 0;
 
-            if (!angular.isDefined(data)){
-                oControllerVar.m_oTranslateService('SECTIONCHART_NODATA', {value: oControllerVar.m_sSectionCode}).then(function(msg)
-                {
-                    vex.dialog.alert({
-                        message: msg
-                    });
-                    oControllerVar.m_bLoading = false;
-                    return;
+            data.forEach(function (hydrogram) {
+                var aChartType = hydrogram.type.split(';');
+                aChartType.forEach(function (sHydrogramType) {
 
-                });
-                //alert('Impossibile caricare il grafico della sezione ' + oControllerVar.m_sSectionCode);
-            }
-            if (data=="") {
-                oControllerVar.m_oTranslateService('SECTIONCHART_NODATA', {value: oControllerVar.m_sSectionCode}).then(function(msg)
-                {
-                    vex.dialog.alert({
-                        message: msg
-                    });
-                    oControllerVar.m_bLoading = false;
-                    return;
+                    oControllerVar.m_oChartService.getSeriesDirect('1',oControllerVar.m_sDDSserieId,oControllerVar.m_sSectionCode).success(function (hydrogramData){
 
-                });
-                //alert('Impossibile caricare il grafico della sezione ' + oControllerVar.m_sSectionCode);
-                //oControllerVar.m_bLoading = false;
-                //return;
-            }
+                        oControllerVar.m_oScope.aoHydrograms.push({
+                            type:sHydrogramType,
+                            enabled :false,
+                            title :sHydrogramType,
+                            hydrogramData: hydrogramData,
+                            hydroId : ""
+                        })
+                        counter++;
+                        if (counter == data.length) oControllerVar.loadChart() 
 
-            oControllerVar.oChartVM = data;
-            oControllerVar.m_aoOtherCharts = [];
-            oControllerVar.m_sImageLink = data.imageLink;
+                    }).error(function (err) {
+                        console.log(err)
+                        console.log(aChartType)
+                        counter++;
+                        if (counter == data.length) oControllerVar.loadChart()
 
-            var oDialog = oControllerVar.m_oDialogService.getExistingDialog(oControllerVar.m_sSectionCode);
+                    })
+                })
+            })
 
-            if(angular.isDefined(oControllerVar.oChartVM.otherChart)) {
-
-                oControllerVar.oChartVM.otherChart.forEach(function(sType){
-                    var oOtherChartLink = {};
-                    oOtherChartLink.sensorType = sType;
-
-                    if (oControllerVar.m_sChartType == sType)
-                    {
-                        oOtherChartLink.isActive = true;
-                    }
-                    else
-                    {
-                        oOtherChartLink.isActive = false;
-                    }
-
-                    var oHydroLink = oControllerVar.m_oConstantsService.getFlattedHydroLinkByType(sType);
-
-                    if (oHydroLink != null)
-                    {
-                        oOtherChartLink.description = oHydroLink.description;
-                        oOtherChartLink.imageLinkOff = oHydroLink.link;
-                    }
-
-                    oControllerVar.m_aoOtherCharts.push(oOtherChartLink);
-                });
-
-            }
-
-
-            oControllerVar.m_bLoading = false;
-        }).error(function(data,status){
-            oControllerVar.m_oLog.error('Error Contacting Omirl Server');
         });
+
+        // getSeriedirect 1 ,comunege.idro.probabilisticlami, polc00(sezione?),from,to
+        // var hydrogramData = {
+        //     id :sectionData.prop.id,
+        //     feature:sectionData.section.DATI_DA,
+        //     section : sectionData.section.SEZIONE,
+        //     area : sectionData.section.AREA,
+        //     basin : sectionData.section.NOME_BACIN,
+        //     thresholds : thrs,
+        //     procedure : '',
+        //     scenario : '',
+        //     dateRef : moment.utc(title_tokens[3], "YYYYMMDDHHmm").valueOf(),
+        //     now : menuService.getDateToUTCSecond() * 1000,
+        //     timeline : res[res.length - 1].timeline,
+        //     values : values,
+        //     isRealTime : menuService.isRealTime(),
+        //     yRuler:null
+        // };
+
+        // oControllerVar.m_oChartService.getSectionChart(this.m_sSectionCode,this.m_sChartType).success(function(data,status) {
+        //
+        //     if (!angular.isDefined(data)){
+        //         oControllerVar.m_oTranslateService('SECTIONCHART_NODATA', {value: oControllerVar.m_sSectionCode}).then(function(msg)
+        //         {
+        //             vex.dialog.alert({
+        //                 message: msg
+        //             });
+        //             oControllerVar.m_bLoading = false;
+        //             return;
+        //
+        //         });
+        //         //alert('Impossibile caricare il grafico della sezione ' + oControllerVar.m_sSectionCode);
+        //     }
+        //     if (data=="") {
+        //         oControllerVar.m_oTranslateService('SECTIONCHART_NODATA', {value: oControllerVar.m_sSectionCode}).then(function(msg)
+        //         {
+        //             vex.dialog.alert({
+        //                 message: msg
+        //             });
+        //             oControllerVar.m_bLoading = false;
+        //             return;
+        //
+        //         });
+        //         //alert('Impossibile caricare il grafico della sezione ' + oControllerVar.m_sSectionCode);
+        //         //oControllerVar.m_bLoading = false;
+        //         //return;
+        //     }
+        //
+        //     oControllerVar.oChartVM = data;
+        //     oControllerVar.m_aoOtherCharts = [];
+        //     oControllerVar.m_sImageLink = data.imageLink;
+        //
+        //     var oDialog = oControllerVar.m_oDialogService.getExistingDialog(oControllerVar.m_sSectionCode);
+        //
+        //     if(angular.isDefined(oControllerVar.oChartVM.otherChart)) {
+        //
+        //         oControllerVar.oChartVM.otherChart.forEach(function(sType){
+        //             var oOtherChartLink = {};
+        //             oOtherChartLink.sensorType = sType;
+        //
+        //             if (oControllerVar.m_sChartType == sType)
+        //             {
+        //                 oOtherChartLink.isActive = true;
+        //             }
+        //             else
+        //             {
+        //                 oOtherChartLink.isActive = false;
+        //             }
+        //
+        //             var oHydroLink = oControllerVar.m_oConstantsService.getFlattedHydroLinkByType(sType);
+        //
+        //             if (oHydroLink != null)
+        //             {
+        //                 oOtherChartLink.description = oHydroLink.description;
+        //                 oOtherChartLink.imageLinkOff = oHydroLink.link;
+        //             }
+        //
+        //             oControllerVar.m_aoOtherCharts.push(oOtherChartLink);
+        //         });
+        //
+        //     }
+        //
+        //
+        //     oControllerVar.m_bLoading = false;
+        // }).error(function(data,status){
+        //     oControllerVar.m_oLog.error('Error Contacting Omirl Server');
+        // });
     }
 
 
-    SectionChartController.prototype.isLoadingVisibile = function () {
+    SectionCimaChartController.prototype.isLoadingVisibile = function () {
         return this.m_bLoading;
     }
 
-    SectionChartController.prototype.getOtherLinks = function() {
+    SectionCimaChartController.prototype.getOtherLinks = function() {
         return this.m_aoOtherCharts;
     }
 
-    SectionChartController.prototype.otherLinkClicked = function(oOtherLink) {
+    SectionCimaChartController.prototype.otherLinkClicked = function(oOtherLink) {
 
         var oControllerVar = this;
         this.m_bLoading = true;
@@ -200,19 +270,19 @@ var SectionChartController = (function() {
 
     }
 
-    SectionChartController.prototype.getHeight = function() {
+    SectionCimaChartController.prototype.getHeight = function() {
         return this.m_iHeight.toString() + "px";
     }
 
-    SectionChartController.prototype.getMinWidth = function() {
+    SectionCimaChartController.prototype.getMinWidth = function() {
         return "310px";
     }
 
-    SectionChartController.prototype.getWidth = function() {
+    SectionCimaChartController.prototype.getWidth = function() {
         return this.m_iWidth.toString() + "px";
     }
 
-    SectionChartController.prototype.zoomIn = function() {
+    SectionCimaChartController.prototype.zoomIn = function() {
         var oDialog = this.m_oDialogService.getExistingDialog(this.m_sSectionCode);
         if (angular.isDefined(oDialog)) {
             this.m_iHeight *= 1.1;
@@ -223,7 +293,7 @@ var SectionChartController = (function() {
         }
     }
 
-    SectionChartController.prototype.zoomOut = function() {
+    SectionCimaChartController.prototype.zoomOut = function() {
         var oDialog = this.m_oDialogService.getExistingDialog(this.m_sSectionCode);
         if (angular.isDefined(oDialog)) {
             this.m_iHeight /= 1.1;
@@ -235,7 +305,7 @@ var SectionChartController = (function() {
     }
 
 
-    SectionChartController.$inject = [
+    SectionCimaChartController.$inject = [
         '$scope',
         'dialogService',
         'ChartService',
@@ -244,6 +314,6 @@ var SectionChartController = (function() {
         '$log',
         '$translate'
     ];
-    return SectionChartController;
+    return SectionCimaChartController;
 }) ();
 

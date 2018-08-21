@@ -66,6 +66,7 @@ omirlApp.config(['$httpProvider', '$translateProvider', function($httpProvider, 
 
 }]);
 
+
 omirlApp.config(function($routeProvider) {
         $routeProvider.when('/map', {templateUrl: 'partials/map.html', controller: 'MapController'});
         $routeProvider.when('/tables', {templateUrl: 'partials/tables.html', controller: 'TablesController'});
@@ -90,5 +91,9 @@ omirlApp.config(function($routeProvider) {
 
 omirlApp.controller("MapController", MapController);
 omirlApp.controller("TablesController", TablesController);
+
+omirlApp.factory('_', function() {
+    return window._; // assumes underscore has already been loaded on the page
+});
 
 

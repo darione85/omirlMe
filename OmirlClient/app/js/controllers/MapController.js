@@ -1415,18 +1415,18 @@ var MapController = (function () {
         //
         // })
 
-        if(oController.m_oConstantsService.getReferenceDate() != ""){
-            var to = moment.utc(oController.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').valueOf()/1000;
-            var from =moment.utc(oController.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').subtract(24,"hours").valueOf()/1000
-        }else {
-            var to = moment.utc(new Date()).valueOf()/1000;
-            var from =moment.utc(new Date()).subtract(24,"hours").valueOf()/1000
-        }
+        // if(oController.m_oConstantsService.getReferenceDate() != ""){
+        //     var to = moment.utc(oController.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').valueOf()/1000;
+        //     var from =moment.utc(oController.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').subtract(24,"hours").valueOf()/1000
+        // }else {
+        //     var to = moment.utc(new Date()).valueOf()/1000;
+        //     var from =moment.utc(new Date()).subtract(24,"hours").valueOf()/1000
+        // }
 
 
 
 
-        oController.m_oMapLayerService.publishLayer(oMapLink, from ,to).success(function (data) {
+        oController.m_oMapLayerService.publishLayer(oMapLink).success(function (data) {
             oMapLink.prop = data.properties;
             oMapLink.item = data.item;
             oMapLink.layerid = data.layerid;
@@ -3329,6 +3329,7 @@ var MapController = (function () {
 
                         // Set attributes of the Feature
                         oFeature.attributes = angular.copy(aoSections[iSections].properties);
+                        oFeature.attributes.ddsSerieId = oSectionLink.layerData.id;
                         oFeature.attributes.opacity = 1;
 
 
@@ -3369,7 +3370,7 @@ var MapController = (function () {
                                 click: function(feature) {
                                     if (feature.attributes.color != -1) {
                                         // Show chart
-                                        oMapController.showSectionChart(feature);
+                                        oMapController.showCimaSectionChart(feature);
                                     }
                                 }
                             }
@@ -3536,6 +3537,52 @@ var MapController = (function () {
         };
 
         this.m_oDialogService.open(sSectionCode,"sectionChart.html", model, options)
+    }
+
+    MapController.prototype.showCimaSectionChart = function(oFeature) {
+
+        var oControllerVar = this;
+        var sSectionCode = oFeature.attributes.code;
+        var sBasin = oFeature.attributes.basin;
+        var sName = oFeature.attributes.sezione;
+        var sRiver = oFeature.attributes.sezione;
+        var sDDSSerieId = oFeature.attributes.ddsSerieId
+
+        if (this.m_oDialogService.isExistingDialog(sSectionCode)) {
+            return;
+        }
+
+        // var sModel = this.m_oSelectedHydroLink.linkCode;
+
+
+        // The data for the dialog
+        var model = {
+            "sectionCode": sSectionCode,
+            "chartType": "hydrogram",
+            "basin": sBasin,
+            "name": sName,
+            "feature":oFeature,
+            "ddsSerieId":sDDSSerieId
+        };
+
+
+        // jQuery UI dialog options
+        var options = {
+            autoOpen: false,
+            modal: false,
+            resizable: false,
+            close: function(event, ui) {
+                // Remove the chart from the Chart Service
+                oControllerVar.m_oChartService.removeChart(sSectionCode);
+            },
+            title:  oFeature.attributes.sezione + " - " + sBasin + "",
+            position: {my: "left top", at: "left top"},
+            width: 'auto',
+            height: 600,
+            dialogClass:'sectionChartDialog'
+        };
+
+        this.m_oDialogService.open(sSectionCode,"sectionCimaChart.html", model, options)
     }
 
 

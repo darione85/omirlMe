@@ -48,7 +48,15 @@ angular.module('omirl.MapLayerService', ['omirl.ConstantsService']).
             // return this.m_oHttp.post(oConstantsService.buildDDSURL('ddsmap/' + layer.server.id + '/availability/'), obj)
         }
 
-        this.publishLayer =  function (layer,from,to) {
+        this.publishLayer =  function (layer) {
+
+            if(oConstantsService.getReferenceDate() != ""){
+                var to = moment.utc(oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').valueOf()/1000;
+                var from =moment.utc(oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').subtract(24,"hours").valueOf()/1000
+            }else {
+                var to = moment.utc(new Date()).valueOf()/1000;
+                var from =moment.utc(new Date()).subtract(24,"hours").valueOf()/1000
+            }
 
             var obj = {
                 layer: layer.id,
