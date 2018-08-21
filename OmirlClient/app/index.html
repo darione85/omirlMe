@@ -57,6 +57,7 @@
     <script src="js/classes/Utils.js"></script>
     <script src="js/classes/WebcamDialog.js"></script>
 
+    <script src="js/services/cimaCharts.js"></script>
     
     <!-- JavaScript -->
     <!-- In production use:
@@ -104,6 +105,7 @@
     <!--script src="http://code.highcharts.com/highcharts.js"></script>
     <script src="http://code.highcharts.com/modules/exporting.js"></script-->
     <script src="lib/Highstock/highstock.js"></script>
+    <script src="lib/Highstock/highcharts-more.js"></script>
     <script src="lib/Highstock/modules/exporting.js"></script>
     <!-- DateTimePicker -->
     <script src="lib/datetimepicker/datetimepicker.js"></script>
@@ -627,16 +629,15 @@ dialogCtrl controller in app.js.
                 <!--<a href="#2" data-toggle="tab">Tab 2</a>-->
             <!--</li>-->
         <!--</ul>-->
-
+        <p>{{model.sectionCode}}</p>
         <ul class="nav nav-tabs">
             <li ng-repeat="hydrogram in aoHydrograms">
-                <a href="#{{$index}}" data-toggle="tab" ng-click="m_oController.chartType(hydrogram.type)"> {{hydrogram.title}}</a>
+                <a ng-click="m_oController.onChartTypeClick(hydrogram.type)"> {{hydrogram.title}}</a>
             </li>
         </ul>
 
+        <div id="chart-{{model.sectionCode}}" ng-style="{ 'height': m_oController.getHeight(), 'min-width': m_oController.getMinWidth(), 'width': m_oController.getWidth()}"></div >
 
-
-        <div cima-section-high-chart="m_oController" ng-style="{ 'height': m_oController.getHeight(), 'min-width': m_oController.getMinWidth(), 'width': m_oController.getWidth()}"></div>
 
         <div ng-repeat="oOtherChart in m_oController.getOtherLinks()"
              class="col-md-1 col-xs-1 map-firstlevel-icon"

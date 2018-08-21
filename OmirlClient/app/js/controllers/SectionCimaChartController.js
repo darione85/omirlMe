@@ -17,7 +17,7 @@ var SectionCimaChartController = (function() {
 
         this.oChartVM = [];
 
-        this.m_sImageLink = "img/nodata.jpg"
+        this.m_sImageLink = "img/nodata.jpg";
 
         this.m_sDDSserieId = this.m_oScope.model.ddsSerieId;
         this.m_sSectionCode = this.m_oScope.model.sectionCode;
@@ -39,6 +39,10 @@ var SectionCimaChartController = (function() {
     }
 
 
+    SectionCimaChartController.prototype.aoHydrograms = [];
+
+
+
     SectionCimaChartController.prototype.getImageLink = function() {
         //return this.m_sImageLink;
 
@@ -55,8 +59,76 @@ var SectionCimaChartController = (function() {
         this.m_sChartType = id;
     };
 
-    SectionCimaChartController.prototype.LoadChart = function () {
-        console.log()
+
+    SectionCimaChartController.prototype.dict = function(sChartType){
+
+        var oConfig = {
+            'MaximumHydrogramChart':{
+                'loader':showMaximumHydrogramChart,
+                'settings':{
+                    envelop_series_name:"Q(env c.i. 100%)",
+                    max_series_name:"Q(max)",
+                    obs_series_name:"Q(obs)",
+                    envelop80_series_name:"Q(env c.i. 80%)",
+                    envelop50_series_name:"Q(env c.i. 50%)",
+                    envelopMean_series_name:"Q(Median)",
+                    yAxis_labels_x: 30,
+                    yAxis_title:'<p style="color: blue">Q [m<sup>3</sup>s<sup>-1</sup>]</p>',
+                    unit_of_measure:'m<sup>3</sup>s<sup>-1</sup>',
+                    hydrogramsIndexOffset:0
+                }
+            },
+            'ProbabilisticHydrogramChart':{
+                'loader': showProbabilisticHydrogramChart,
+                'settings':{
+                    max_series_name:"(Q, P[Qmax > Q])",
+                    yAxis_labels_x: 5,
+                    yAxis_tickInterval: 0.1,
+                    yAxis_title:'<p style="color: blue">Q [m<sup>3</sup>s<sup>-1</sup>]</p>',
+                    unit_of_measure:'m<sup>3</sup>s<sup>-1</sup>',
+                    hydrogramsIndexOffset:0,
+                }
+            }
+        }
+        return oConfig[sChartType]
+
+
+    };
+
+    SectionCimaChartController.prototype.loadChart = function (sChartType) {
+
+        var oControllerVar = this;
+
+        if(angular.isUndefined(sChartType)){
+            sChartType = (oControllerVar.m_oScope.aoHydrograms.length> 0)?oControllerVar.m_oScope.aoHydrograms[0].type:'MaximumHydrogramChart'
+        }
+
+        var oChartSettings = oControllerVar.dict(sChartType).settings;
+
+        oChartSettings.htmlDiv = "chart-"+oControllerVar.m_sSectionCode;
+
+        if (!angular.isUndefined(oControllerVar.chartLoaded)) oControllerVar.chartLoaded.chart.destroy();
+
+        oControllerVar.m_oScope.aoHydrograms.forEach(function (h) {
+            if (h.type == sChartType){
+                oControllerVar.chartLoaded =oControllerVar.dict(sChartType).loader(h,400,oChartSettings)
+            }
+        })
+
+
+
+
+
+        // showMaximumHydrogramChart(oControllerVar.m_oScope.aoHydrograms[0], 400,oChartSettings)
+
+    };
+
+    SectionCimaChartController.prototype.onChartTypeClick = function(sChartType){
+        var oControllerVar = this;
+        console.log("Load : "+sChartType);
+
+        oControllerVar.loadChart(sChartType);
+
     };
 
     SectionCimaChartController.prototype.LoadData = function () {
@@ -67,6 +139,8 @@ var SectionCimaChartController = (function() {
             // console.log(data)
             // data[0].type = "MaximumHydrogramChart;ProbabilisticHydrogramChart";
             var counter = 0;
+            oControllerVar.m_oScope.model[data[0].fidField];
+
 
             data.forEach(function (hydrogram) {
                 var aChartType = hydrogram.type.split(';');
@@ -74,8 +148,48 @@ var SectionCimaChartController = (function() {
 
                     oControllerVar.m_oChartService.getSeriesDirect('1',oControllerVar.m_sDDSserieId,oControllerVar.m_sSectionCode).success(function (hydrogramData){
 
+                        var aResult = [];
+                        var aValues = []
+
+                        if (!hydrogramData[0]) aResult.push(hydrogramData);
+                        else aResult= hydrogramData;
+
+                        var aTitle = aResult[0].title.split(";");
+
+                        // $scope.chartSubTitle = moment.utc(aTitle[3], "YYYYMMDDHHmm").format('DD/MM/YYYY HH:mm');
+
+                        aResult.forEach(function(h) {
+                            aValues.push(h.values)
+                        });
+
+                        var thrs = [];
+                        if(oControllerVar.m_oDialogModel.feature.attributes.Q_ALLARME){
+                            thrs.push({ name : 'Thr1(ALLARME)', value : oControllerVar.m_oDialogModel.feature.attributes.Q_ALLARME })
+                            thrs.push({ name : 'Thr2(ALLERTA)', value : oControllerVar.m_oDialogModel.feature.attributes.Q_ALLERTA })
+                        }
+
+
+                        if(oControllerVar.m_oConstantsService.getReferenceDate() != ""){
+                            var to = moment.utc(oControllerVar.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').valueOf()/1000;
+                            var from =moment.utc(oControllerVar.m_oConstantsService.getReferenceDate(),'DD/MM/YYYY HH:mm').subtract(24,"hours").valueOf()/1000
+                        }else {
+                            var to = moment.utc(new Date()).valueOf()/1000;
+                            var from =moment.utc(new Date()).subtract(24,"hours").valueOf()/1000
+                        }
+
+
+
                         oControllerVar.m_oScope.aoHydrograms.push({
                             type:sHydrogramType,
+                            feature:oControllerVar.m_oDialogModel.feature.attributes.sezione,
+                            section:oControllerVar.m_oDialogModel.feature.attributes.sezione,
+                            area:oControllerVar.m_oDialogModel.feature.attributes.area,
+                            basin:oControllerVar.m_oDialogModel.feature.attributes.basin,
+                            thresholds:thrs,
+                            dateRef:moment.utc(aTitle[3], "YYYYMMDDHHmm").valueOf(),
+                            now:to*1000,
+                            timeline:aResult[aResult.length - 1].timeline,
+                            values:aValues,
                             enabled :false,
                             title :sHydrogramType,
                             hydrogramData: hydrogramData,
@@ -86,7 +200,7 @@ var SectionCimaChartController = (function() {
 
                     }).error(function (err) {
                         console.log(err)
-                        console.log(aChartType)
+                        console.log(aChartType);
                         counter++;
                         if (counter == data.length) oControllerVar.loadChart()
 

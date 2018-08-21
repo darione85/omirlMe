@@ -18,7 +18,7 @@ function showMaximumHydrogramChart(hydrogram, iChartHeight, oChartSettings, $sce
         chart = new Highcharts.StockChart({
 
             chart: {
-                renderTo: hydrogram.htmlDiv,
+                renderTo: oChartSettings.htmlDiv,
                 alignTicks: false,
                 zoomType: 'xy',
                 height : iChartHeight
@@ -267,7 +267,7 @@ function showMaximumHydrogramChart(hydrogram, iChartHeight, oChartSettings, $sce
 
                 min : 0,
                 // min : oChartSettings.yAxisExtremes.min,
-                max : oChartSettings.yAxisExtremes.max,
+                // max : oChartSettings.max,
                 // min : (oChartSettings.isVolume? null : 0),
                 //max : getQMax(),
                 //tickInterval: oChartSettings.yAxis_tickInterval,
@@ -741,13 +741,13 @@ function showMaximumHydrogramChart(hydrogram, iChartHeight, oChartSettings, $sce
 
 
     // La prima volta imposta quelli generato dal chart
-    if (!oChartSettings.yAxisExtremes.min) {
-
-        var volExtremes = chart.yAxis[0].getExtremes();
-        oChartSettings.yAxisExtremes.min = volExtremes.min;
-        oChartSettings.yAxisExtremes.max = volExtremes.max;
-
-    }
+    // if (!oChartSettings.yAxisExtremes.min) {
+    //
+    //     var volExtremes = chart.yAxis[0].getExtremes();
+    //     oChartSettings.yAxisExtremes.min = volExtremes.min;
+    //     oChartSettings.yAxisExtremes.max = volExtremes.max;
+    //
+    // }
 
     //soglie invasi
 
@@ -763,4 +763,357 @@ function showMaximumHydrogramChart(hydrogram, iChartHeight, oChartSettings, $sce
     }
 
 }
+
+
+/**
+ * Deterministic Hydrograms chart wrapper
+ */
+function showProbabilisticHydrogramChart(hydrogram, iChartHeight, oChartSettings ) {
+
+    var chart = null;
+    var thrs_colors = ['yellow', 'red'];
+    var plotLines = [];
+
+
+    var getQMax = function() {
+
+        var maxQ = -1, Qmod;
+        // Thresholds
+        for (var i = 0; i < hydrogram.thresholds.length; i++) {
+
+            if (hydrogram.thresholds[i].value > maxQ) maxQ = hydrogram.thresholds[i].value;
+
+        }
+        if ((hydrogram.area > 0) && (maxQ < 0)) maxQ = 20*Math.pow(hydrogram.area, 0.6);
+
+        // Q
+        var aoMax = getMaximumValues(hydrogram);
+
+        if (aoMax[aoMax.length - 1].value > maxQ) maxQ = aoMax[aoMax.length - 1].value;
+
+        return (maxQ * 1.1)/(oChartSettings.isVolume? 1000000 : 1);
+
+    };
+
+    var initChart = function() {
+
+        if (chart) chart.destroy();
+
+        chart = new Highcharts.Chart({
+
+            chart: {
+                renderTo: oChartSettings.htmlDiv,
+                alignTicks: false,
+                zoomType: 'xy',
+                height : iChartHeight
+
+            },
+            options: {
+                chart : {
+                    backgroundColor:'rgba(255, 255, 255, 1)'
+                }
+            },
+
+            title: {
+                text: null
+            },
+
+            tooltip: {
+                useHTML: true,
+                shared: true,
+                crosshairs: true,
+                formatter: function() {
+
+
+                    if (this.point) {
+
+                        var s = '<div style="font-family:\'Open Sans\', sans-serif;font-size: 12px;color: #000000">' + oChartSettings.max_series_name
+                            + ': (' + this.point.x.toFixed(2) + (oChartSettings.isVolume? (' x 10<sup>6</sup>') : '') + '; ' + this.point.y.toFixed(1) + ')</div><br>';
+
+                        return s;
+
+                    } else return null;
+
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: true,
+                useHTML: true
+            },
+
+            series: [
+
+                // max
+                {
+                    name: oChartSettings.max_series_name,
+                    type:  'scatter',
+                    color: '#0000FF',
+                    marker: {
+
+                        radius: 3,
+                        symbol: 'square'
+
+                    },
+                    events:{
+                        click:function (event) {
+                            // rasorService.rasorDamageLayerLoader(hydrogram, event.point.scenario);
+                        }
+                    },
+                    data:[],
+                    useHTML: true,
+                    showInLegend: true
+                }
+
+            ],
+            xAxis: {
+
+                ordinal: false,
+                min : (oChartSettings.isVolume? null : 0),
+                max : getQMax(),
+                tickPixelInterval: 50,
+                lineWidth: 2,
+                gridLineWidth: 2,
+                lineColor: 'black',
+                title: {
+                    margin: 0,
+                    text: oChartSettings.yAxis_title,
+                    useHTML:true,
+                    style: {
+                        fontWeight : 'bold',
+                        fontFamily: 'Open Sans'
+                    }
+                },
+                labels: {
+                    format: (oChartSettings.isVolume? '{value:.2f}' : '{value:.1f}'),
+                    style: {
+                        fontFamily: 'Open Sans',
+                        textTransform: 'lowercase',
+                        fontSize: '14px'
+                    }
+
+                    //,formatter: function () {
+                    //    var oDate = new Date(this.value);
+                    //    if ((oDate.getUTCHours() == 0) && (oDate.getUTCMinutes() == 0))
+                    //        return '<b>' + Highcharts.dateFormat('%d %b', this.value) + '</b>';
+                    //    else
+                    //        return Highcharts.dateFormat('%H:%M', this.value);
+                    //}
+
+                }
+
+
+            },
+            plotOptions: {
+                series: {
+                    dataGrouping: {
+                        enabled: true,
+                        approximation :"high"
+                    },
+                    animation: false
+                },
+                line: {
+                    marker: {
+                        enabled: true,
+                        radius: 1
+                    }
+                },
+                area: {
+                    marker: {
+                        enabled: true,
+                        radius: 1
+                    }
+                },
+                scatter: {
+                    marker: {
+                        enabled: true,
+                        radius: 1
+                    }
+                },
+            },
+            yAxis: [{ // Primary yAxis
+                ordinal: false,
+                min : 1,
+                max : 95,
+                type : 'logarithmic',
+                tickInterval: oChartSettings.yAxis_tickInterval,
+                showLastLabel : true,
+                allowDecimals: false,
+                alternateGridColor: 'rgba(0, 144, 201, 0.1)',
+                labels: {
+                    x: oChartSettings.yAxis_labels_x,
+                    y: 5,
+                    format: '{value:.0f}',
+                    style: {
+                        color: 'blue',
+                        fontFamily: 'Open Sans',
+                        textTransform: 'lowercase'
+                    }
+                },
+                title: {
+                    rotation: 270,
+                    margin: 0,
+                    offset: (oChartSettings.yAxis_labels_x + 30),
+                    useHTML:true,
+                    text: 'P',
+                    style: {
+                        fontWeight : 'bold',
+                        fontFamily: 'Open Sans',
+                        fontSize: '14px'
+                    }
+                },
+                opposite: true
+            }],
+
+            loading: false
+
+        });
+
+    };
+
+    /**
+     * Restituisce i valori max e min tra tutti gli idrogrammi ad un istante temporale
+     * @param hydrogram
+     * @param index
+     * @return
+     */
+    var getMinAndMax = function(hydrogram, index) {
+
+        var val, max = -Number.MAX_VALUE, min = Number.MAX_VALUE;
+
+        for (var k = (oChartSettings.hydrogramsIndexOffset + 1); k < hydrogram.values.length; k++) {
+
+            val = parseFloat(hydrogram.values[k][index]);
+
+            if (val >= 0) {
+
+                if (val < min) min = val;
+                if (val > max) max = val;
+
+            }
+        }
+
+        return ((min != Number.MAX_VALUE)? { 'min' : min, 'max' : max } : { 'min' : null, 'max' : null });
+
+    };
+
+    /**
+     * Restituisce la coppia (time, value) relativa al max di un idrogramma
+     * @param hydrogram
+     * @param index
+     * @param minTime
+     * @param maxTime
+     * @return
+     */
+    var getMaximumValue = function(hydrogram, index, minTime, maxTime) {
+
+        var dt, val, maximumTime = 0, maximumValue = -Number.MAX_VALUE;
+
+        for (var k = 0; k < hydrogram.timeline.length; k++) {
+
+            dt = moment.utc(hydrogram.timeline[k]).valueOf();
+
+            if ((dt >= minTime) && (dt <= maxTime)) {
+                val = parseFloat(hydrogram.values[index][k]);
+                if ((val >= 0) && (val > maximumValue)) {
+
+                    maximumTime = dt;
+                    maximumValue = val;
+
+                }
+            }
+
+        }
+
+        return { 'time' : maximumTime, 'value' : maximumValue };
+
+    };
+
+    var getMaximumValues = function(hydrogram /* , hydrogType, excludePattern */ ) {
+
+        var objMax;
+        var voMax = [];
+
+        for (var i = (oChartSettings.hydrogramsIndexOffset + 1); i < hydrogram.values.length; i++) {
+
+            //if ((hydrogram.m_aeType[i] == hydrogType) && ((excludePattern == null) || (hydrogram.m_asDescr[i].indexOf(excludePattern) < 0))) {
+
+            objMax = getMaximumValue(hydrogram, i, Number.MIN_VALUE, Number.MAX_VALUE);
+
+            if (objMax.value >= 0) voMax.push({"value":objMax.value,"scenario":i});
+            // if (objMax.value >= 0) voMax.push(objMax.value);
+
+            //}
+
+        }
+
+        function sortNumber2(a,b) {
+            return a.value - b.value;
+        }
+
+        function sortNumber(a,b) {
+            return a- b;
+        }
+
+        voMax.sort(sortNumber2);
+
+        return voMax;
+
+    }
+
+    if (!hydrogram) return;
+
+    if (!chart) initChart();
+
+    //setto i due oggetti per modificare i dati e le label
+    var seriesArray = chart.series;
+
+    // thresholds
+    for (var i = 0; i < plotLines.length; i++) {
+        chart.xAxis[0].removePlotLine(plotLines[i].id);
+    }
+    plotLines = [];
+
+    for (var i = 0; i < hydrogram.thresholds.length; i++) {
+
+        if (hydrogram.thresholds[i].value > 0) {
+
+            var p = {
+                id : 'thr_' + i,
+                value : (oChartSettings.isVolume? hydrogram.thresholds[i].value/1000000 : hydrogram.thresholds[i].value),
+                color : thrs_colors[i],
+                width : 2,
+                zIndex: 4,
+                label : {
+                    text : hydrogram.thresholds[i].name
+                }
+            };
+
+            chart.xAxis[0].addPlotLine(p);
+            plotLines.push(p);
+
+        }
+
+    }
+
+    var aoMax = getMaximumValues(hydrogram);
+    var maxValues = [];
+    var num = aoMax.length;
+
+    for (var i = 0; i < num; i++) {
+        maxValues.push({"x":(oChartSettings.isVolume? aoMax[i].value/1000000 : aoMax[i].value),"y": ((num - i)/(num + 1)) * 100,"scenario":aoMax[i].scenario});
+        // maxValues.push([(oChartSettings.isVolume? aoMax[i]/1000000 : aoMax[i]), ((num - i)/(num + 1)) * 100])
+    }
+    seriesArray[0].id = hydrogram.section + '_Qmax';
+    seriesArray[0].setData(maxValues);
+
+    return{
+        chart:chart
+    }
+
+}
+
+
 
