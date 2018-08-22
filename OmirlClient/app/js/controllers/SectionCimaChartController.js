@@ -2,7 +2,7 @@
  * Created by p.campanella on 23/03/2015.
  */
 var SectionCimaChartController = (function() {
-    function SectionCimaChartController($scope, dialogService, oChartService, $timeout, oConstantsService, $log, $translate) {
+    function SectionCimaChartController($scope, dialogService, oChartService, $timeout, oConstantsService, $log, $translate,_) {
         this.m_oScope = $scope;
         this.m_oScope.m_oController = this;
         this.m_oDialogService = dialogService;
@@ -37,9 +37,6 @@ var SectionCimaChartController = (function() {
         oControllerVar.LoadData();
 
     }
-
-
-    SectionCimaChartController.prototype.aoHydrograms = [];
 
 
 
@@ -100,7 +97,11 @@ var SectionCimaChartController = (function() {
         var oControllerVar = this;
 
         if(angular.isUndefined(sChartType)){
-            sChartType = (oControllerVar.m_oScope.aoHydrograms.length> 0)?oControllerVar.m_oScope.aoHydrograms[0].type:'MaximumHydrogramChart'
+            sChartType = (oControllerVar.m_oScope.aoHydrograms.length > 0)?oControllerVar.m_oScope.aoHydrograms[0].type:"nodata";
+        }
+
+        if(oControllerVar.m_oScope.aoHydrograms.length >0 && angular.isUndefined(sChartType)){
+                sChartType = oControllerVar.m_oScope.aoHydrograms[0].type;
         }
 
         var oChartSettings = oControllerVar.dict(sChartType).settings;
@@ -109,17 +110,26 @@ var SectionCimaChartController = (function() {
 
         if (!angular.isUndefined(oControllerVar.chartLoaded)) oControllerVar.chartLoaded.chart.destroy();
 
+        oControllerVar.toggleChart(sChartType);
+
+
         oControllerVar.m_oScope.aoHydrograms.forEach(function (h) {
             if (h.type == sChartType){
                 oControllerVar.chartLoaded =oControllerVar.dict(sChartType).loader(h,400,oChartSettings)
-            }
+                h.loaded = true
+            }else h.loaded = false;
         })
 
+    };
 
+    SectionCimaChartController.prototype.toggleChart = function(sChartType){
+        var oControllerVar = this;
 
-
-
-        // showMaximumHydrogramChart(oControllerVar.m_oScope.aoHydrograms[0], 400,oChartSettings)
+        oControllerVar.m_oScope.aoHydrograms.forEach(function (oHydrogram) {
+            if (oHydrogram.type == sChartType) {
+                oHydrogram.loaded = true
+            }else oHydrogram.loaded = false;
+        });
 
     };
 
@@ -181,6 +191,8 @@ var SectionCimaChartController = (function() {
 
                         oControllerVar.m_oScope.aoHydrograms.push({
                             type:sHydrogramType,
+                            enabled:true,
+                            loaded:false,
                             feature:oControllerVar.m_oDialogModel.feature.attributes.sezione,
                             section:oControllerVar.m_oDialogModel.feature.attributes.sezione,
                             area:oControllerVar.m_oDialogModel.feature.attributes.area,
@@ -190,7 +202,6 @@ var SectionCimaChartController = (function() {
                             now:to*1000,
                             timeline:aResult[aResult.length - 1].timeline,
                             values:aValues,
-                            enabled :false,
                             title :sHydrogramType,
                             hydrogramData: hydrogramData,
                             hydroId : ""
@@ -200,7 +211,19 @@ var SectionCimaChartController = (function() {
 
                     }).error(function (err) {
                         console.log(err)
-                        console.log(aChartType);
+                        console.log(sHydrogramType);
+                        oControllerVar.m_oScope.aoHydrograms.push({
+                            type:sHydrogramType,
+                            enabled:false,
+                            loaded:false,
+                            feature:oControllerVar.m_oDialogModel.feature.attributes.sezione,
+                            section:oControllerVar.m_oDialogModel.feature.attributes.sezione,
+                            area:oControllerVar.m_oDialogModel.feature.attributes.area,
+                            basin:oControllerVar.m_oDialogModel.feature.attributes.basin,
+                            dateRef:moment.utc(aTitle[3], "YYYYMMDDHHmm").valueOf(),
+                            title :sHydrogramType,
+                            hydroId : ""
+                        })
                         counter++;
                         if (counter == data.length) oControllerVar.loadChart()
 

@@ -632,7 +632,7 @@ dialogCtrl controller in app.js.
         <p>{{model.sectionCode}}</p>
         <ul class="nav nav-tabs">
             <li ng-repeat="hydrogram in aoHydrograms">
-                <a ng-click="m_oController.onChartTypeClick(hydrogram.type)"> {{hydrogram.title}}</a>
+                <a class="btn btn-default" ng-class="{disabled:!hydrogram.enabled, active:hydrogram.loaded}" ng-click="m_oController.onChartTypeClick(hydrogram.type)"> {{hydrogram.title}}</a>
             </li>
         </ul>
 
