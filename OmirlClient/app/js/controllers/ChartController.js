@@ -22,6 +22,7 @@ var ChartController = (function() {
 
         this.m_sSectionCode = this.m_oScope.model.stationCode;
         this.m_sChartType = this.m_oScope.model.chartType;
+        this.m_bIsDavisStation = (this.m_oScope.model.hasOwnProperty('isDavis'))?true:false;
 
         this.m_iHeight = 490;
         this.m_iWidth = 730;
@@ -88,7 +89,7 @@ var ChartController = (function() {
     ChartController.prototype.LoadData = function () {
         var oControllerVar = this;
 
-        oControllerVar.oChartVM = oControllerVar.m_oChartService.getStationChart(this.m_sSectionCode,this.m_sChartType).success(function(data,status) {
+        oControllerVar.oChartVM = oControllerVar.m_oChartService.getStationChart(this.m_sSectionCode,this.m_sChartType,this.m_bIsDavisStation ).success(function(data,status) {
 
             if (!angular.isDefined(data) || data == ""){
                 oControllerVar.m_oTranslate('CHARTCONTROLLER_LOADDATA', {value: oControllerVar.m_sSectionCode}).then(function(text){
@@ -186,7 +187,7 @@ var ChartController = (function() {
         var bIsStockChart = true;
         bIsStockChart = oControllerVar.m_oChartService.isStockChart(oOtherLink.sensorType);
 
-        oControllerVar.oChartVM = oControllerVar.m_oChartService.getStationChart(this.m_sSectionCode,oOtherLink.sensorType).success(function(data,status) {
+        oControllerVar.oChartVM = oControllerVar.m_oChartService.getStationChart(this.m_sSectionCode,oOtherLink.sensorType,this.m_bIsDavisStation).success(function(data,status) {
 
 
             if (!angular.isDefined(data) || data == ""){

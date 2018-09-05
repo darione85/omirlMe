@@ -501,32 +501,32 @@
                     <!--cima-->
 
 
-                    <accordion-group ng-class="{'map-accordion-open' : isopen}" ng-show="m_oController.m_bShowCimaSensors">
-                        <accordion-heading>
-                            <div class="icon icon-antenna pull-left"></div>
-                            <span class="map-accordion-title">{{'MAP_CIMA_SENSORS' | translate}}</span><i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isopen, 'glyphicon-chevron-right': !isopen}"></i>
-                        </accordion-heading>
-                        <div class="map-accordion-content">
-                            <div class="row">
-                                <sidebar-menu-legacy
-                                        id="{{m_oController.MENU_CIMA_SENSORS}}"
-                                        on-init="null"
-                                        controller="m_oController"
-                                        menu-legend-selected="m_oController.m_sCimaSensorsLegendSelected"
-                                        menu-legend-hover="m_oController.m_sCimaSensorsLegendHover"
-                                        is-first-level="m_oController.m_bIsCimaSensorsFirstLevel"
-                                        on-menu-item-click="m_oController.sensorLinkClicked"
-                                        first-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_1]"
-                                        second-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_2]"
-                                        third-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_3]"
-                                        third-level-menu-selected-item="null"
-                                        third-level-menu-click="m_oController.CimaSensorsClicked"
-                                >
-                                </sidebar-menu-legacy>
+                    <!--<accordion-group ng-class="{'map-accordion-open' : isopen}" ng-show="m_oController.m_bShowCimaSensors">-->
+                        <!--<accordion-heading>-->
+                            <!--<div class="icon icon-antenna pull-left"></div>-->
+                            <!--<span class="map-accordion-title">{{'MAP_CIMA_SENSORS' | translate}}</span><i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isopen, 'glyphicon-chevron-right': !isopen}"></i>-->
+                        <!--</accordion-heading>-->
+                        <!--<div class="map-accordion-content">-->
+                            <!--<div class="row">-->
+                                <!--<sidebar-menu-legacy-->
+                                        <!--id="{{m_oController.MENU_CIMA_SENSORS}}"-->
+                                        <!--on-init="null"-->
+                                        <!--controller="m_oController"-->
+                                        <!--menu-legend-selected="m_oController.m_sCimaSensorsLegendSelected"-->
+                                        <!--menu-legend-hover="m_oController.m_sCimaSensorsLegendHover"-->
+                                        <!--is-first-level="m_oController.m_bIsCimaSensorsFirstLevel"-->
+                                        <!--on-menu-item-click="m_oController.sensorLinkClicked"-->
+                                        <!--first-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_1]"-->
+                                        <!--second-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_2]"-->
+                                        <!--third-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_SENSORS][m_oController.MENU_LEVEL_3]"-->
+                                        <!--third-level-menu-selected-item="null"-->
+                                        <!--third-level-menu-click="m_oController.CimaSensorsClicked"-->
+                                <!--&gt;-->
+                                <!--</sidebar-menu-legacy>-->
 
-                            </div>
-                        </div>
-                    </accordion-group>
+                            <!--</div>-->
+                        <!--</div>-->
+                    <!--</accordion-group>-->
 
 
                     <accordion-group ng-class="{'map-accordion-open' : isopen}" ng-show="m_oController.m_bShowCimaImpact">
@@ -546,7 +546,7 @@
                                         on-menu-item-click="m_oController.ImpactLinkClicked"
                                         first-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_IMPACT][m_oController.MENU_LEVEL_1]"
                                         second-level-menu-items="null"
-                                        third-level-menu-items="null"
+                                        third-level-menu-items="m_oController.m_aoMenuLinks[m_oController.MENU_CIMA_IMPACT][m_oController.MENU_LEVEL_3]"
                                         third-level-menu-selected-item="null"
                                         third-level-menu-click="null"
                                 >

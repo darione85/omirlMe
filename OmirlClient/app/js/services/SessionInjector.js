@@ -7,7 +7,7 @@ angular.module('omirl.sessionInjector', ['omirl.ConstantsService']).
     var sessionInjector = {
         request: function(config) {
             //TODO remove headers for cima request
-            if(config.url.indexOf(oConstantsService.DDSURL)>-1){
+            if((config.url.indexOf(oConstantsService.DDSURL)>-1)||config.url.indexOf(oConstantsService.DDSURLSCENARIO)>-1){
                 return config;
             }else{
                 var oDate = oConstantsService.getReferenceDateString();

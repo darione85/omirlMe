@@ -4,8 +4,10 @@
 
 'use strict';
 angular.module('omirl.stationsService', ['omirl.ConstantsService']).
-    service('StationsService', ['$http',  'ConstantsService', function ($http, oConstantsService) {
+    service('StationsService', ['$http',  'ConstantsService','$q', function ($http, oConstantsService,$q) {
         this.APIURL = oConstantsService.getAPIURL();
+
+        this.DAVISSTATIONURL = oConstantsService.getDEVISSTATIONAPIURL();
 
         this.m_oConstantsService = oConstantsService;
 
@@ -48,13 +50,31 @@ angular.module('omirl.stationsService', ['omirl.ConstantsService']).
             ]
         }
 
-        this.getStations = function(oStationsLink) {
+        this.getStations = function(oStationsLink, Callback) {
+
+            var _This = this;
+            _This.getArpalStations(oStationsLink).success(function (aoArpalStations) {
+
+                _This.getDavisStations(oStationsLink).success(function (aoDavisStation) {
+                    aoDavisStation.forEach(function (oDavisStation) {
+                        oDavisStation.isDavis = true;
+                    })
+                    Callback(aoDavisStation.concat(aoArpalStations))
+
+                })
+            })
+            // return this.m_oHttp.get(this.APIURL + '/stations/'+oStationsLink.code);
+        };
+
+        this.getArpalStations = function(oStationsLink) {
             return this.m_oHttp.get(this.APIURL + '/stations/'+oStationsLink.code);
         };
 
         this.getDavisStations = function (oStationsLink) {
             return this.m_oHttp.get(this.DAVISSTATIONURL + '/stations/'+oStationsLink.code);
         };
+
+
 
         this.getStationsByCode = function(sCode) {
             return this.m_oHttp.get(this.APIURL + '/stations/'+ sCode);

@@ -14,6 +14,7 @@ angular.module('omirl.ConstantsService', []).
         this.DAVISSTATIONURL = 'http://213.203.179.36:8080/Omirl/rest';
 
         this.DDSURL = "http://dds.cimafoundation.org/dewetra2/dewapi/";
+        this.DDSURLSCENARIO = "http://dds.cimafoundation.org/scenario/scenario/";
         this.cimaToken = "anywhere%7C1533287411647%7C417d462d-43dd-41ea-8a65-367f0e941aff%3B628";
 
         this.WMSURL = 'http://omirl.regione.liguria.it/geoserver/wms';
@@ -111,6 +112,14 @@ angular.module('omirl.ConstantsService', []).
 
         this.getAPIURL = function() {
             return this.APIURL;
+        }
+
+        this.getDEVISSTATIONAPIURL = function () {
+            return this.DAVISSTATIONURL;
+        }
+
+        this.getExposureScenarioUrl = function () {
+            return this.DDSURLSCENARIO;
         }
 
         this.getWMSURL = function() {

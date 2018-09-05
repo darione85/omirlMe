@@ -15,6 +15,8 @@ angular.module('az.services').factory('az.services.layersService',function($root
         m_oSectionsLayer: null,
         m_oWeatherLayer: null,
         m_oMarkerLayer: null,
+        m_oCimaImpactLayer:null,
+        m_oCimaDynamicImpactLayer:null,
         m_aoStaticLayers: [],
         m_aoLegendsMap: [],
         m_aoSensorLayerColorRanges: [

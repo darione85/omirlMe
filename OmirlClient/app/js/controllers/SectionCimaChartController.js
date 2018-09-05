@@ -220,7 +220,7 @@ var SectionCimaChartController = (function() {
                             section:oControllerVar.m_oDialogModel.feature.attributes.sezione,
                             area:oControllerVar.m_oDialogModel.feature.attributes.area,
                             basin:oControllerVar.m_oDialogModel.feature.attributes.basin,
-                            dateRef:moment.utc(aTitle[3], "YYYYMMDDHHmm").valueOf(),
+                            // dateRef:moment.utc(aTitle[3], "YYYYMMDDHHmm").valueOf(),
                             title :sHydrogramType,
                             hydroId : ""
                         })

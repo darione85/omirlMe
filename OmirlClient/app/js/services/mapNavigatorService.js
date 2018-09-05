@@ -190,7 +190,7 @@ angular.module('omirl.mapNavigatorService', ['omirl.ConstantsService']).
         "active": false,
         "clickable": true,
        "selected":false,
-        "code": "Pluvio",
+        "code": "Termo",
         "count": 50,
             "sensorClass":2,
         "description": "OMIRLCONFIG_SENSORTHERMO",

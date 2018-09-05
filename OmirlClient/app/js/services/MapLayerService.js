@@ -105,6 +105,31 @@ angular.module('omirl.MapLayerService', ['omirl.ConstantsService']).
             return this.m_oHttp.get(oConstantsService.buildDDSURL('floodproof/layer/'+server+'/' + serieId + '/' + to + '/'))
 
 
+        };
+
+        this.getExposure = function (layerId) {
+            return this.m_oHttp.get(oConstantsService.getExposureScenarioUrl()+'exposures/filteredbyrisk/'+layerId+'/schools;hospitals;strategics;gates/')
+        };
+
+        this.buildExposureIcon = function buildExposureIcon(e, exposureType, highlight, skipRotation) {
+            var cRotated = e.rotated && !skipRotation ? 'iconrotated_'+e.rotated : '';
+            var c = ' class="' + exposureType.eclass + ' ' + cRotated;
+            if (highlight) {
+                c += ' active'
+            }
+            c += '"';
+            return L.divIcon({
+                iconSize: new L.Point(64, 64),
+                className: 'div-icon-leaflet',
+                html:
+                '<div id="station"' + c + '>' +
+                // '<div class="' + e.currentriskclass + '" >' +
+                '<div class="R_' + e.risk_star.code + '" ></div>' +
+                // '<i  class= "ico_' + exposureType.eclass + '"></i>' +
+                '<i  class= "ico_scenario-' + exposureType.eclass + '"></i>' +
+                '</div>' +
+                '</div>'
+            })
         }
 
 

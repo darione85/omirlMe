@@ -88,6 +88,8 @@ var MapController = (function () {
         this.m_aoMenuLinks[this.MENU_CIMA_SENSORS][this.MENU_LEVEL_1] = [];
         this.m_aoMenuLinks[this.MENU_CIMA_IMPACT] = [];
         this.m_aoMenuLinks[this.MENU_CIMA_IMPACT][this.MENU_LEVEL_1] = [];
+        this.m_aoMenuLinks[this.MENU_CIMA_IMPACT][this.MENU_LEVEL_2] = [];
+        this.m_aoMenuLinks[this.MENU_CIMA_IMPACT][this.MENU_LEVEL_3] = [];
 
 
         // *** Methods ***
@@ -1073,6 +1075,7 @@ var MapController = (function () {
 
             // Clear variables and remember the Controller ref
             var oControllerVar = oController;
+
             oControllerVar.m_aoMapLinks = [];
 
             // Get second level from server
@@ -1423,7 +1426,21 @@ var MapController = (function () {
         //     var from =moment.utc(new Date()).subtract(24,"hours").valueOf()/1000
         // }
 
-
+        // var oMarkersLayer = new OpenLayers.Layer.Markers( "Markers" );
+        //
+        // var size = new OpenLayers.Size(21,25);
+        // var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+        // var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png', size, offset);
+        //
+        // var epsg4326 =  new OpenLayers.Projection("EPSG:4326"); //WGS 1984 projection
+        //
+        // var projectTo = oController.m_oMapService.map.getProjectionObject(); //The map projection (Spherical
+        //
+        // var oMarkerIcon = new OpenLayers.Geometry.Point(44, 8).transform(epsg4326, projectTo);
+        //
+        // oMarkersLayer.addMarker(new OpenLayers.Marker(oMarkerIcon,icon));
+        //
+        // oController.m_oLayerService.setMarkerLayer(oMarkersLayer)
 
 
         oController.m_oMapLayerService.publishLayer(oMapLink).success(function (data) {
@@ -1431,11 +1448,12 @@ var MapController = (function () {
             oMapLink.item = data.item;
             oMapLink.layerid = data.layerid;
 
+
             var oLayer = new OpenLayers.Layer.WMS(oMapLink.description, oMapLink.server.url+"/wms", {layers: oMapLink.layerid,
                 transparent: "true",
                 format: "image/png"
             });
-            console.log(oLayer);
+            // console.log(oLayer);
             if (oController.m_oLayerService.getDynamicLayer() != null) {
                 oController.m_oMapService.map.removeLayer(oController.m_oLayerService.getDynamicLayer());
             }
@@ -1443,8 +1461,75 @@ var MapController = (function () {
             oLayer.setOpacity(0.6);
             // Add the new layer to the map
             oController.m_oLayerService.setDynamicLayer(oLayer);
+
+
+
             oController.m_oMapService.map.addLayer(oLayer);
             oController.m_oMapService.map.setLayerIndex(oLayer, oController.m_oLayerService.getBaseLayers().length);
+
+
+            oController.m_oMapLayerService.getExposure(data.layerid).success(function(data){
+                
+                //rimuovo le feature esitt
+                // var style = new OpenLayers.style.Style({
+                //     text: new ol.style.Text({
+                //         text: '\uf041',
+                //         font: 'normal 18px FontAwesome',
+                //         textBaseline: 'Bottom',
+                //         fill: new ol.style.Fill({
+                //             color: 'white',
+                //         })
+                //     })
+                // });
+
+                // var oMarkersLayer = new OpenLayers.Layer.Markers( "Markers" );
+                //
+                // var size = new OpenLayers.Size(21,25);
+                // var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+                // var icon = new OpenLayers.Icon('http://www.openlayers.org/dev/img/marker.png', size, offset);
+                //
+                // var epsg4326 =  new OpenLayers.Projection("EPSG:4326"); //WGS 1984 projection
+                //
+                // var projectTo = oServiceVar.m_oMapService.map.getProjectionObject(); //The map projection (Spherical
+                //
+                // var oMarkerIcon = new OpenLayers.Geometry.Point(8, 44).transform(epsg4326, projectTo);
+                //
+                // oMarkersLayer.markers.addMarker(new OpenLayers.Marker(oMarkerIcon,icon));
+                //
+                // oController.m_oLayerService.setMarkerLayer(oMarkersLayer)
+                //
+                // console.log(data)
+
+                if(data.features.length > 0){
+                    oController.m_oLayerService.getMarkerLayer().clearMarkers();
+                    // Get the location
+
+
+
+                    data.feautures.forEach(function (feature) {
+                        var oLocation = new OpenLayers.LonLat(feature.geometry.location.lng(), feature.geometry.location.lat());
+
+                        var epsg4326 =  new OpenLayers.Projection("EPSG:4326"); //WGS 1984 projection
+                        var projectTo = oController.m_oMapService.map.getProjectionObject();
+                        var oPoint = new OpenLayers.Geometry.Point(oLocation.lon, oLocation.lat).transform(epsg4326, projectTo);
+
+                        var oIconSize = new OpenLayers.Size(48,48);
+                        var oIconOffset = new OpenLayers.Pixel(-(oIconSize.w/2), -oIconSize.h);
+
+                        var oIcon = new OpenLayers.Icon('img/marker.png',oIconSize,oIconOffset);
+                        var oMarker = new OpenLayers.Marker(oLocation.transform(epsg4326,projectTo), oIcon);
+
+                        oController.m_oLayerService.getMarkerLayer().addMarker(oMarker);
+                    })
+                }
+
+
+                
+            }).error(function (err) {
+               alert(err)
+            });
+
+
         })
 
 
@@ -2153,6 +2238,7 @@ var MapController = (function () {
         sHtml += "<br><div>Codice: " + oFeature.attributes.shortCode + " - ["+sReferenceDataUTC + "] </div>";
         // Lat Lon
         sHtml += "<div>Lat: " + oFeature.attributes.lat + " Lon: " + oFeature.attributes.lon + "</div>";
+        sHtml +=(oFeature.attributes.hasOwnProperty('isDavis'))?"<div> Davis Station Network</div>":"";
 
         // Close Popup Div
         sHtml += "</div>";
@@ -2260,6 +2346,10 @@ var MapController = (function () {
                 "subTitle": ""
             };
 
+        if(oFeature.attributes.hasOwnProperty("isDavis")){
+            model.isDavis = true;
+        }
+
 
 
         oControllerVar.m_oTranslateService('DIALOGTITLE', {name: oFeature.attributes.name, municipality: oFeature.attributes.municipality, subTitle: ""}).then(function(text){
@@ -2306,9 +2396,9 @@ var MapController = (function () {
 
 
         // Obtain Stations Values from the server
-        var sOmirlOrDavis= (oSensorLink.hasOwnProperty("hasDavisStation"))?"getDavisStations":"getStations";
+        // var sOmirlOrDavis= (oSensorLink.hasOwnProperty("hasDavisStation"))?"getDavisStations":"getStations";
 
-        this.m_oStationsService[sOmirlOrDavis](oSensorLink).success(function(data,status) {
+        this.m_oStationsService.getStations(oSensorLink,function(data,status) {
 
             var aoStations = data;
 
@@ -2450,6 +2540,7 @@ var MapController = (function () {
                     stationId: oStation.stationId,
                     // Station Name
                     name: oStation.name,
+
                     // Sensor Value
                     value: oStation.value,
                     // Reference Date
@@ -2480,6 +2571,10 @@ var MapController = (function () {
                     //Color
                     color: oColor
                 };
+
+                if (oStation.hasOwnProperty('isDavis')){
+                    oFeature.attributes.isDavis = true;
+                }
 
                 // Add the feature to the array
                 aoFeatures.push(oFeature);
@@ -2521,6 +2616,9 @@ var MapController = (function () {
                         // Click
                         click: function(feature) {
                             // Show chart
+                            if(feature.attributes.hasOwnProperty("isDavis")){
+                                feature.isDavis = true;
+                            }
                             oMapController.showStationsChart(feature);
                         }
                     }
@@ -2561,7 +2659,7 @@ var MapController = (function () {
                 });
             }
 
-        }).error(function(data,status){
+        },function(data,status){
             oServiceVar.m_oLog.error('Error contacting Omirl Server');
         });
     }
@@ -3542,10 +3640,10 @@ var MapController = (function () {
     MapController.prototype.showCimaSectionChart = function(oFeature) {
 
         var oControllerVar = this;
-        var sSectionCode = oFeature.attributes.code;
-        var sBasin = oFeature.attributes.basin;
-        var sName = oFeature.attributes.sezione;
-        var sRiver = oFeature.attributes.sezione;
+        var sSectionCode = oFeature.attributes.CODE;
+        var sBasin = oFeature.attributes.BASIN;
+        var sName = oFeature.attributes.SEZIONE;
+        var sRiver = oFeature.attributes.SEZIONE;
         var sDDSSerieId = oFeature.attributes.ddsSerieId
 
         if (this.m_oDialogService.isExistingDialog(sSectionCode)) {
